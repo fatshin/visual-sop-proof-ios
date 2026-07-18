@@ -13,9 +13,10 @@ with fat loss while performance is preserved.
 
 ## How it was built
 
-Codex implemented normalization, evidence triangulation, uncertainty handling,
-tests, and the public interface. GPT-5.6 is intended to write the evidence
-explanation after local aggregation; raw health data remains local.
+I used Codex with GPT-5.6 to implement normalization, evidence triangulation,
+uncertainty handling, tests, and the public interface. A future live path can
+use GPT-5.6 to write the evidence explanation after local aggregation; the
+public demo uses synthetic tested data, and raw health data remains local.
 
 ## Proof
 
