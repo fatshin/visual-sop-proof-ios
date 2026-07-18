@@ -1,5 +1,7 @@
 # Thesis Breaker Japan
 
+[Live demo](https://thesis-breaker-japan.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/thesis-breaker-japan)
+
 Thesis Breaker Japan searches normalized quarterly evidence for conditions
 that disconfirm a Japanese-equity investment thesis. Broken theses appear
 before intact ones and retain a page-level source reference.
@@ -36,4 +38,3 @@ whether a thesis is broken. The offline path avoids live EDINET dependencies.
 
 This is not financial advice. The MVP accepts normalized JSON and does not
 download filings, parse XBRL, place trades, or estimate expected return.
-
