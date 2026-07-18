@@ -1,0 +1,31 @@
+# Public Notice Stress Test — Submission
+
+**Tagline:** Catch the sentence that should stop a public release.
+
+## What it does
+
+The product breaks a public notice into factual claims, compares each claim with
+its evidence, blocks contradictory or unsupported wording, and proposes a
+repair that preserves uncertainty.
+
+## How it was built
+
+Codex implemented claim extraction, evidence matching, release gating,
+deterministic evaluation, and the public interface. GPT-5.6 is intended to
+propose claim boundaries and repair wording; cited evidence remains the gate.
+
+## Proof
+
+- 5 direct conflicts and 1 unsupported claim detected
+- release blocked until all six findings are repaired
+- synthetic fixture, automated tests, and narrated demo
+
+## Links
+
+- Live product: https://public-notice-stress-test.fatshin.chatgpt.site
+- Source: https://github.com/fatshin/public-notice-stress-test
+- Video: `UPLOAD_TO_YOUTUBE_AND_REPLACE`
+
+## Limits
+
+A communications owner must approve a real notice. The demo does not publish.

@@ -1,5 +1,7 @@
 # Public Notice Stress Test
 
+[Live demo](https://public-notice-stress-test.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/public-notice-stress-test)
+
 Public Notice Stress Test checks a public notice against authoritative facts
 before publication. It highlights conflicting dates, amounts, eligibility,
 contact details, and unsupported promises, then emits source-linked repairs.
@@ -36,4 +38,3 @@ remains the release gate. The offline path is the primary submitted evidence.
 
 The MVP expects normalized authoritative facts. It does not scrape government
 sites, establish legal validity, or publish a corrected notice automatically.
-
