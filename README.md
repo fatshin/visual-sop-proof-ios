@@ -1,5 +1,7 @@
 # Body Recomposition Evidence Engine
 
+[Live demo](https://body-recomposition-evidence.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/body-recomposition-evidence-engine)
+
 Body Recomposition Evidence Engine combines a 30-day synthetic HealthKit-style
 export, Strong workout records, two body scans, and nutrition observations. It
 separates falling scale weight from strength loss and keeps raw health data
@@ -38,4 +40,3 @@ local. The submitted path uses synthetic data and no API key.
 
 This is a wellness evidence demo, not medical advice. The local MVP consumes
 normalized exports rather than requesting HealthKit permission directly.
-
