@@ -13,9 +13,10 @@ repair that preserves uncertainty.
 
 ## How it was built
 
-Codex implemented claim extraction, evidence matching, release gating,
-deterministic evaluation, and the public interface. GPT-5.6 is intended to
-propose claim boundaries and repair wording; cited evidence remains the gate.
+I used Codex with GPT-5.6 to implement claim extraction, evidence matching,
+release gating, deterministic evaluation, and the public interface. A future
+live path can use GPT-5.6 to propose claim boundaries and repair wording; the
+public demo uses a tested fixture, and cited evidence remains the gate.
 
 ## Proof
 
