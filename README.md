@@ -1,5 +1,7 @@
 # Agent Autopsy
 
+[Live demo](https://agent-autopsy.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/agent-autopsy)
+
 Agent Autopsy converts a failed support-agent trace into a reproducible failure
 report, regression-test assertions, and a narrow patch plan. It never applies a
 patch automatically.
@@ -38,4 +40,3 @@ judge path is intentionally credential-free.
 
 The MVP accepts normalized JSON traces and proposes patches. It does not execute
 untrusted code, replay production transactions, or mutate a repository.
-
