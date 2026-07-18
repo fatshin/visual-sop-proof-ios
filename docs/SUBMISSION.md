@@ -24,6 +24,7 @@ policy intake; the local validator remains authoritative.
 
 - Live product: https://agent-policy-compiler.fatshin.chatgpt.site
 - Source: https://github.com/fatshin/agent-policy-compiler
+- Devpost draft: https://devpost.com/software/agent-policy-compiler
 - Video: `UPLOAD_TO_YOUTUBE_AND_REPLACE`
 
 ## Limits
