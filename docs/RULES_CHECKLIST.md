@@ -25,7 +25,7 @@ Checked on 2026-07-18 (Asia/Tokyo).
 - [ ] Upload the narrated video publicly to YouTube.
 - [ ] Submit the existing Devpost project before the competition deadline.
 - [ ] Add the public repository and YouTube URLs to the Devpost entry.
-- [ ] Run the required `/feedback` flow and add its session ID.
+- [x] Core-build Codex session ID recorded: `019f72a4-b110-72e3-b57b-782c34f6c3c8`.
 - [ ] Confirm judges can access the project for free during evaluation.
 
 Do not mark the external items complete until each public URL and the feedback session ID have been opened and verified.

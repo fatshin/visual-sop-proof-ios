@@ -55,4 +55,4 @@ The next step is prospective capture guidance: while a worker records the inspec
 - Public GitHub repository: https://github.com/fatshin/visual-sop-proof-ios
 - Public YouTube demo, under three minutes with narration: `TODO`
 - Devpost project page: https://devpost.com/software/visual-sop-proof
-- Required `/feedback` session ID: `TODO`
+- Required `/feedback` session ID: `019f72a4-b110-72e3-b57b-782c34f6c3c8`
