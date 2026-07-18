@@ -30,7 +30,8 @@ test("server-renders the independent product shell", async () => {
   const html = await response.text();
   assert.match(html, /<title>.+ — OpenAI Build Week<\/title>/i);
   assert.match(html, /One product\./);
-  assert.match(html, /Run the included case\./);
+  assert.match(html, /Reveal the verified fixture\./);
+  assert.match(html, /precomputed from the tested fixture/);
   assert.match(html, /Built with Codex and GPT-5\.6/);
 });
 
