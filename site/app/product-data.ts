@@ -8,8 +8,17 @@ export const product: Product = {
   description: "Compare a draft public notice with its evidence packet, mark direct contradictions and unsupported claims, and propose precise repairs before publication.",
   accent: "#e04431",
   inputLabel: "Draft notice and evidence",
-  inputHint: "The same benefit notice and five-field source record are evaluated by product.py.",
-  inputValue: "Emergency Support Benefit\nDraft: apply by 2026-09-30; ¥70,000; age 16+; resident by 2026-05-01; support@example.go.jp; late applications may be accepted.\nSource: 2026-08-31; ¥50,000; age 18+; resident by 2026-04-01; benefits@example.go.jp.",
+  inputHint: "This exact notice and five-field source record are evaluated by product.py.",
+  inputValue: `Draft notice:
+Emergency Support Benefit
+Apply by 2026-09-30 at 23:59.
+Every resident aged 16 or older receives ¥70,000 automatically.
+You must have lived in the city by 2026-05-01.
+Questions: support@example.go.jp
+Applications submitted after the deadline may still be accepted.
+
+Authoritative source:
+{"deadline":"2026-08-31","amount_yen":50000,"minimum_age":18,"residency_date":"2026-04-01","faq_contact":"benefits@example.go.jp"}`,
   actionLabel: "Reveal verified result",
   status: "BLOCKED_FOR_RELEASE",
   statusTone: "bad",
