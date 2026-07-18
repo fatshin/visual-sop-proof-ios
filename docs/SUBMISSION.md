@@ -24,6 +24,7 @@ structured claims from filings; investors verify all source documents.
 
 - Live product: https://thesis-breaker-japan.fatshin.chatgpt.site
 - Source: https://github.com/fatshin/thesis-breaker-japan
+- Devpost draft: https://devpost.com/software/thesis-breaker-japan
 - Video: `UPLOAD_TO_YOUTUBE_AND_REPLACE`
 
 ## Limits
