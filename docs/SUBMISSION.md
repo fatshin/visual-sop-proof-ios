@@ -2,6 +2,9 @@
 
 **Tagline:** Make every agent failure leave behind a test.
 
+**Category:** Developer Tools  
+**Codex Session ID:** `019f7306-7262-7371-a03f-6b99df7129bf`
+
 ## What it does
 
 Agent Autopsy reconstructs a failed trace, separates the first causal mistake
