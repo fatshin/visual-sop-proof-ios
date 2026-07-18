@@ -24,6 +24,7 @@ assumptions; owners approve the final assumptions and triggers.
 
 - Live product: https://decision-invalidation-ledger.fatshin.chatgpt.site
 - Source: https://github.com/fatshin/decision-invalidation-ledger
+- Devpost draft: https://devpost.com/software/decision-invalidation-ledger
 - Video: `UPLOAD_TO_YOUTUBE_AND_REPLACE`
 
 ## Limits
