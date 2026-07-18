@@ -1,0 +1,2 @@
+Misconception Replay checks whether a correct answer came from correct reasoning. In five of these twenty fraction cases, the student reaches five sixths but explains that they added both numerators and both denominators. The evaluator flags that reasoning, reports an F1 score of one on the fixed set, and generates a counterexample where the faulty rule produces an obviously wrong result. GPT-5.6 can broaden the taxonomy and counterexamples, while this labeled evaluation remains the quality gate.
+
