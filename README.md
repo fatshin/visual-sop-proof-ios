@@ -31,12 +31,17 @@ patch automatically.
 
 ## OpenAI and Codex
 
-Codex was used for implementation and adversarial review. GPT-5.6 can be added
-as a hypothesis generator over the normalized trace, but deterministic
-detectors decide whether the three acceptance failures are present. The offline
-judge path is intentionally credential-free.
+I used Codex with GPT-5.6 to implement trace normalization, causal detectors,
+regression tests, the public interface, and adversarial review. A future live
+path can use GPT-5.6 as a hypothesis generator over an unstructured trace, but
+deterministic detectors decide whether the three acceptance failures are
+present. The submitted judge path is intentionally credential-free.
 
 ## Limits
 
 The MVP accepts normalized JSON traces and proposes patches. It does not execute
 untrusted code, replay production transactions, or mutate a repository.
+
+## License
+
+This project and its synthetic trace are released under the MIT License.
