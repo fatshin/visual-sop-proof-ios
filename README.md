@@ -1,5 +1,7 @@
 # Misconception Replay
 
+[Live demo](https://misconception-replay.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/misconception-replay)
+
 Misconception Replay checks the reasoning behind a correct fraction answer. It
 detects a misconception, supplies a counterexample, and reports evaluation
 precision, recall, and F1 over 20 labeled cases.
@@ -37,4 +39,3 @@ set remains the submitted quality gate.
 
 The MVP covers fraction addition and three reasoning states. It is not a
 general student assessment or a substitute for a teacher.
-
