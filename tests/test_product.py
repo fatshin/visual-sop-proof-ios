@@ -27,9 +27,15 @@ class ProductTests(unittest.TestCase):
 
     def test_public_fixture_matches_engine_fixture(self):
         site = Path("site/app/product-data.ts").read_text()
-        self.assertIn("[00:18] REQ-1", site)
-        self.assertIn("orders over $500", site)
-        self.assertNotIn("empty project names", site)
+        result = product.analyze({field.name: field.value for field in product.PRODUCT.fields})
+        for line in product.TRANSCRIPT.splitlines():
+            self.assertIn(line, site)
+        for line in product.SOURCE.splitlines():
+            self.assertIn(line, site)
+        self.assertIn(result["status"], site)
+        self.assertIn('value: "4", label: "baseline failures"', site)
+        self.assertIn('value: "4", label: "post-patch passes"', site)
+        self.assertIn("Human apply gate preserved", site)
 
 
 if __name__ == "__main__":

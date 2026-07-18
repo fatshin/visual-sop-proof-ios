@@ -8,12 +8,23 @@ export const product: Product = {
   description: "Extract timestamped requirements from a transcript, translate them into executable checks, and prepare the smallest patch for human review.",
   accent: "#4e78ff",
   inputLabel: "Timestamped transcript",
-  inputHint: "The same checkout transcript and broken source are evaluated by product.py.",
-  inputValue: "[00:18] REQ-1 reject quantity below 1.\n[00:44] REQ-2 orders over $500 require manager approval.\n[01:12] REQ-3 receipt shows order ID.\n[01:48] REQ-4 retry must not create a second charge.\n[02:10] Approval means a non-empty manager token.",
+  inputHint: "This exact transcript and broken source are evaluated by product.py.",
+  inputValue: `Transcript:
+[00:18] Maya: REQ-1 Checkout must reject a quantity below 1.
+[00:44] Ken: REQ-2 Orders over $500 require manager approval.
+[01:12] Maya: REQ-3 The receipt must show the order ID.
+[01:48] Ken: REQ-4 Retry must not create a second charge.
+[02:10] Maya: Approval means a non-empty manager token.
+
+Broken source:
+def checkout(quantity, total, manager_token="", order_id=""):
+    approved = total >= 500
+    charge()
+    return {"ok": True, "order": ""}`,
   actionLabel: "Reveal verified result",
   status: "READY_FOR_HUMAN_APPLY",
   statusTone: "good",
-  metrics: [{ value: "4", label: "requirements" }, { value: "4", label: "generated tests" }, { value: "0", label: "auto-applied changes" }],
+  metrics: [{ value: "4", label: "requirements" }, { value: "4", label: "baseline failures" }, { value: "4", label: "post-patch passes" }],
   findings: [
     { title: "Four requirements extracted", detail: "REQ-1 through REQ-4 retain their timestamps and speakers.", badge: "TRACEABLE", tone: "good" },
     { title: "Four expected checks mapped", detail: "The fixture maps each requirement to a named baseline-fail / post-patch-pass expectation.", badge: "EXPECTED", tone: "warn" },
