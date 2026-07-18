@@ -24,6 +24,7 @@ propose claim boundaries and repair wording; cited evidence remains the gate.
 
 - Live product: https://public-notice-stress-test.fatshin.chatgpt.site
 - Source: https://github.com/fatshin/public-notice-stress-test
+- Devpost draft: https://devpost.com/software/public-notice-stress-test
 - Video: `UPLOAD_TO_YOUTUBE_AND_REPLACE`
 
 ## Limits
