@@ -1,0 +1,2 @@
+Decision Invalidation Ledger records not only what was decided, but what evidence would reopen that decision. This fixture contains three decisions and a new evidence package. Running the evaluator leaves one decision valid, marks one at risk, and invalidates one because measured quality crossed its explicit threshold. The original decision is never rewritten, and every status keeps the evidence source. GPT-5.6 can extract candidate assumptions, while humans approve the ledger and deterministic conditions own the status.
+
