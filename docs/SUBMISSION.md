@@ -13,9 +13,10 @@ source, and ambiguous identity cases stop instead of guessing.
 
 ## How it was built
 
-Codex designed the policy representation, validator, regression cases, and
-browser experience. GPT-5.6 is the planned structured-output compiler for live
-policy intake; the local validator remains authoritative.
+I used Codex with GPT-5.6 to design the policy representation, validator,
+regression cases, and browser experience. A future live intake path can use
+GPT-5.6 Structured Outputs; the public demo uses a tested fixture, and the local
+validator remains authoritative.
 
 ## Proof
 
