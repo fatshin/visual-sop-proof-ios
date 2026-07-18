@@ -1,5 +1,7 @@
 # Demo Script — 2 minutes 35 seconds
 
+Rendered submission candidate: [`artifacts/demo/visual-sop-proof-demo.mp4`](../artifacts/demo/visual-sop-proof-demo.mp4), 2 minutes 27.54 seconds. The exact synthesized English narration is stored in [`artifacts/demo/narration.txt`](../artifacts/demo/narration.txt).
+
 ## 0:00–0:20 — The problem
 
 “A warehouse SOP says workers must inspect a package before sealing it. A video may exist, but reviewing footage by hand is slow, and a generic video summary is not audit evidence. Visual SOP Proof turns the written procedure and the footage into a step-by-step evidence review.”

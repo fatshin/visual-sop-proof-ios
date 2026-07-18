@@ -1,0 +1,13 @@
+Warehouse teams often have a written standard operating procedure and a camera recording, but the two are disconnected. Reviewing every video by hand is slow. A generic AI summary is faster, but it can overstate what happened.
+
+Visual SOP Proof is an iOS procedure-intelligence app for one logistics inspection. The live workflow accepts a PDF procedure and a thirty-to-sixty-second work video. GPT-5.6 first converts the written procedure into four to six observable checks. The app then extracts bounded, timestamped frames, and GPT-5.6 evaluates only the evidence visible in those frames.
+
+This recording uses Sample Replay, a clearly labeled curated fixture. It is not presented as a live OpenAI response. It passes through the same validator, results screen, evidence timeline, and report generator as Live GPT mode, so judges can reproduce the product without credentials.
+
+The first checks have supporting evidence. The package label is visible, and the QR-read confirmation appears in a sampled frame. Step three is different. The procedure requires inspection of every package surface, but the available frames show only the top. The app reports “Not evidenced,” rather than claiming the worker skipped the action. It identifies the missing side views, cites the frames at twelve and seventeen seconds, and requires human review before the step can be treated as omitted.
+
+The remaining steps show sealing and completion. Each result includes observed facts, coverage, confidence, and timestamped frame references. The exported Markdown and PDF report also records SHA-two-fifty-six hashes for the source procedure, video, compiled checks, and sampled frames.
+
+Codex was used throughout the project. It helped verify official documentation, narrow the product to one reliable workflow, design the evidence contract, implement the SwiftUI app and local Python proxy, generate tests and sample assets, and run independent security and reproducibility reviews. Five design reviews happened before implementation, and post-implementation findings were fixed before the public commit.
+
+Visual SOP Proof does not claim to be a legal or tamper-proof attestation. It gives an operations reviewer a traceable link between a written requirement, the available visual evidence, and the remaining human decision. That is the foundation for future real-time capture guidance, training, process improvement, and audit assistance.

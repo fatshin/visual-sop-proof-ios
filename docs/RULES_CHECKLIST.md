@@ -13,6 +13,7 @@ Checked on 2026-07-18 (Asia/Tokyo).
 - [x] Live mode provides a reproducible judge path through a local proxy.
 - [x] Sample assets are project-created and covered by the repository license.
 - [x] A narrated demo script is under three minutes.
+- [x] A 147.54-second English-narrated demo MP4 was rendered and inspected locally.
 - [x] Test commands are documented.
 - [x] The licensed source repository is public at https://github.com/fatshin/visual-sop-proof-ios.
 - [x] The Devpost project page has a complete English description and repository link.

@@ -16,6 +16,8 @@ OpenAI Build Week — Work & Productivity.
 
 Devpost project: https://devpost.com/software/visual-sop-proof
 
+Local submission video: [artifacts/demo/visual-sop-proof-demo.mp4](artifacts/demo/visual-sop-proof-demo.mp4) — 2 minutes 27.54 seconds with English narration.
+
 ## Demo in one minute
 
 1. Open the app in an iPhone Simulator.
