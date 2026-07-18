@@ -30,11 +30,17 @@ before intact ones and retain a page-level source reference.
 
 ## OpenAI and Codex
 
-Codex was used to implement and review the evaluator. GPT-5.6 can extract
-candidate claims from normalized filings, but deterministic rules decide
-whether a thesis is broken. The offline path avoids live EDINET dependencies.
+I used Codex with GPT-5.6 to implement the evaluator, multi-period source
+citations, input-mutation tests, public interface, and review. A future live
+path can use GPT-5.6 to extract candidate claims from normalized filings, but
+deterministic rules decide whether a thesis is broken. The submitted path uses
+synthetic filings and avoids live EDINET dependencies.
 
 ## Limits
 
 This is not financial advice. The MVP accepts normalized JSON and does not
 download filings, parse XBRL, place trades, or estimate expected return.
+
+## License
+
+This project and its synthetic filings are released under the MIT License.
