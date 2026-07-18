@@ -32,11 +32,17 @@ local.
 
 ## OpenAI and Codex
 
-Codex was used for implementation and data-flow review. GPT-5.6 is limited to a
-future summary over derived aggregates; raw HealthKit observations remain
-local. The submitted path uses synthetic data and no API key.
+I used Codex with GPT-5.6 to implement normalization, trend and strength
+calculations, privacy tests, the public interface, and data-flow review. A
+future live path can use GPT-5.6 only to summarize derived aggregates; raw
+HealthKit observations remain local. The submitted path uses synthetic data,
+contains no outbound OpenAI client, and requires no API key.
 
 ## Limits
 
 This is a wellness evidence demo, not medical advice. The local MVP consumes
 normalized exports rather than requesting HealthKit permission directly.
+
+## License
+
+This project and its synthetic health data are released under the MIT License.
