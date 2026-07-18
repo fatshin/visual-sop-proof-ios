@@ -35,13 +35,18 @@ fixture as a live model response.
 
 ## OpenAI and Codex
 
-Codex was used to implement and review the product. The live extension is
-designed for GPT-5.6 Structured Outputs to draft the Policy IR; the local
-validator remains authoritative and rejects incomplete or unsupported rules.
-The submitted judge path uses the precompiled fixture so it remains reviewable
-without credentials.
+I used Codex with GPT-5.6 to turn the policy idea into the intermediate
+representation, input-driven evaluator, regression cases, public interface, and
+review evidence. A future live extension can use GPT-5.6 Structured Outputs to
+draft the Policy IR; the local validator remains authoritative and rejects
+incomplete or unsupported rules. The submitted judge path uses the tested
+fixture so it remains reviewable without credentials.
 
 ## Limits
 
 This MVP deliberately supports three rule families. It is a policy compiler
 proof, not a general authorization system or a production policy engine.
+
+## License
+
+This project and its synthetic fixture are released under the MIT License.
