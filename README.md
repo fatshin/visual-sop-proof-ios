@@ -14,6 +14,8 @@ The differentiating evidence boundary and report controls are shown in
 
 OpenAI Build Week — Work & Productivity.
 
+Devpost project: https://devpost.com/software/visual-sop-proof
+
 ## Demo in one minute
 
 1. Open the app in an iPhone Simulator.

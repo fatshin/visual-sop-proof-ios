@@ -50,9 +50,9 @@ Procedure intelligence needs explicit coverage and uncertainty semantics. The us
 
 The next step is prospective capture guidance: while a worker records the inspection, the app can request a missing side view before the package is sealed. After that, repeated review results can identify SOP steps that are commonly ambiguous or skipped and help process owners improve the instructions.
 
-## Public links to add before submission
+## Public links
 
-- Public GitHub repository: `TODO`
+- Public GitHub repository: https://github.com/fatshin/visual-sop-proof-ios
 - Public YouTube demo, under three minutes with narration: `TODO`
-- Devpost project page: `TODO`
+- Devpost project page: https://devpost.com/software/visual-sop-proof
 - Required `/feedback` session ID: `TODO`
