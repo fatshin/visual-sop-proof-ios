@@ -2,6 +2,9 @@
 
 **Tagline:** Know when the evidence has broken your thesis.
 
+**Category:** Apps for Your Life  
+**Codex Session ID:** `019f7306-7262-7371-a03f-6b99df7129bf`
+
 ## What it does
 
 The product turns a Japanese equity thesis into measurable claims with explicit

@@ -12,9 +12,9 @@ THESES = json.dumps([
     {"id": "T-3", "thesis": "Free cash flow remains positive", "metric": "free_cash_flow", "rule": "below:0"},
 ], indent=2)
 QUARTERS = json.dumps([
-    {"quarter": "2025-Q3", "overseas_ratio": 42, "operating_margin": 14.1, "free_cash_flow": 820, "source": "FY2025-Q3-results.pdf#p12"},
-    {"quarter": "2025-Q4", "overseas_ratio": 40, "operating_margin": 13.8, "free_cash_flow": 610, "source": "FY2025-Q4-results.pdf#p9"},
-    {"quarter": "2026-Q1", "overseas_ratio": 37, "operating_margin": 13.2, "free_cash_flow": 440, "source": "FY2026-Q1-results.pdf#p11"},
+    {"quarter": "2025-Q3", "overseas_ratio": 42, "operating_margin": 14.1, "free_cash_flow": 820, "source": "fixtures/FY2025-Q3-results.md#page-12"},
+    {"quarter": "2025-Q4", "overseas_ratio": 40, "operating_margin": 13.8, "free_cash_flow": 610, "source": "fixtures/FY2025-Q4-results.md#page-9"},
+    {"quarter": "2026-Q1", "overseas_ratio": 37, "operating_margin": 13.2, "free_cash_flow": 440, "source": "fixtures/FY2026-Q1-results.md#page-11"},
 ], indent=2)
 
 PRODUCT = Product(
@@ -53,4 +53,3 @@ def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
     broken = [item for item in result["items"] if item["status"] == "BROKEN"]
     checks = {"three_theses": result["metrics"]["theses"] == 3, "one_broken": len(broken) == 1 and broken[0]["id"] == "T-1", "source_links": all(item["source"] for item in result["items"]), "disclaimer": result["artifact"]["not_financial_advice"]}
     return all(checks.values()), checks
-
