@@ -8,8 +8,20 @@ export const product: Product = {
   description: "Write a Japanese equity thesis as testable claims, monitor the evidence that could invalidate it, and surface a review before conviction becomes inertia.",
   accent: "#d7263d",
   inputLabel: "Three-thesis portfolio fixture",
-  inputHint: "The same three theses and normalized quarters are evaluated by product.py.",
-  inputValue: "T-1 Overseas revenue ratio keeps rising; break after two consecutive declines.\nT-2 Operating margin stays above 12%.\nT-3 Free cash flow remains positive.\nEvidence: 2025-Q3 42/14.1/820; 2025-Q4 40/13.8/610; 2026-Q1 37/13.2/440.",
+  inputHint: "These exact theses and normalized quarters are evaluated by product.py.",
+  inputValue: `Theses:
+[
+  {"id":"T-1","thesis":"Overseas revenue ratio keeps rising","metric":"overseas_ratio","rule":"two_consecutive_declines"},
+  {"id":"T-2","thesis":"Operating margin stays above 12%","metric":"operating_margin","rule":"below:12"},
+  {"id":"T-3","thesis":"Free cash flow remains positive","metric":"free_cash_flow","rule":"below:0"}
+]
+
+Quarterly evidence:
+[
+  {"quarter":"2025-Q3","overseas_ratio":42,"operating_margin":14.1,"free_cash_flow":820,"source":"fixtures/FY2025-Q3-results.md#page-12"},
+  {"quarter":"2025-Q4","overseas_ratio":40,"operating_margin":13.8,"free_cash_flow":610,"source":"fixtures/FY2025-Q4-results.md#page-9"},
+  {"quarter":"2026-Q1","overseas_ratio":37,"operating_margin":13.2,"free_cash_flow":440,"source":"fixtures/FY2026-Q1-results.md#page-11"}
+]`,
   actionLabel: "Reveal verified result",
   status: "REVIEW_PORTFOLIO",
   statusTone: "warn",

@@ -29,10 +29,19 @@ def assess(thesis: dict[str, str], quarters: list[dict[str, Any]]) -> dict[str, 
     values = [float(row[thesis["metric"]]) for row in quarters]
     if thesis["rule"] == "two_consecutive_declines":
         broken, trace = len(values) >= 3 and values[-3] > values[-2] > values[-1], f"{values[-3]:g} → {values[-2]:g} → {values[-1]:g}"
+        sources = [row["source"] for row in quarters[-3:]]
     else:
         threshold = float(thesis["rule"].split(":", 1)[1])
         broken, trace = values[-1] < threshold, f"latest {values[-1]:g}; floor {threshold:g}"
-    return {"id": thesis["id"], "thesis": thesis["thesis"], "status": "BROKEN" if broken else "INTACT", "trace": trace, "source": quarters[-1]["source"]}
+        sources = [quarters[-1]["source"]]
+    return {
+        "id": thesis["id"],
+        "thesis": thesis["thesis"],
+        "status": "BROKEN" if broken else "INTACT",
+        "trace": trace,
+        "source": sources[-1],
+        "sources": sources,
+    }
 
 
 def analyze(payload: dict[str, str]) -> dict[str, Any]:
@@ -51,5 +60,5 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
 
 def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
     broken = [item for item in result["items"] if item["status"] == "BROKEN"]
-    checks = {"three_theses": result["metrics"]["theses"] == 3, "one_broken": len(broken) == 1 and broken[0]["id"] == "T-1", "source_links": all(item["source"] for item in result["items"]), "disclaimer": result["artifact"]["not_financial_advice"]}
+    checks = {"three_theses": result["metrics"]["theses"] == 3, "one_broken": len(broken) == 1 and broken[0]["id"] == "T-1", "source_links": all(item["sources"] for item in result["items"]), "disclaimer": result["artifact"]["not_financial_advice"]}
     return all(checks.values()), checks
