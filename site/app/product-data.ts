@@ -1,5 +1,23 @@
 import type { Product } from "./product-types";
 
+const dailyRows = ["date,weight_kg,calories,protein_g"];
+const startDate = Date.UTC(2026, 5, 19);
+for (let index = 0; index < 30; index += 1) {
+  const day = new Date(startDate + index * 86_400_000).toISOString().slice(0, 10);
+  dailyRows.push(`${day},${(82 - index * 0.08).toFixed(2)},${2200 - (index % 3) * 50},${150 + (index % 4) * 5}`);
+}
+const workoutsFixture = `date,exercise,weight_kg,reps
+2026-06-20,Squat,100,5
+2026-07-17,Squat,105,5
+2026-06-20,Bench Press,75,6
+2026-07-17,Bench Press,77.5,6
+2026-06-20,Deadlift,130,4
+2026-07-17,Deadlift,137.5,4`;
+const bodyFixture = `[
+  {"date":"2026-06-19","body_fat_pct":23.4,"lean_mass_kg":62.8},
+  {"date":"2026-07-18","body_fat_pct":21.8,"lean_mass_kg":63.0}
+]`;
+
 export const product: Product = {
   number: "09",
   name: "Body Recomposition Evidence Engine",
@@ -8,8 +26,15 @@ export const product: Product = {
   description: "Combine normalized HealthKit-style activity, strength markers, and body scans to explain whether a change reflects fat loss while performance is preserved.",
   accent: "#1b9aaa",
   inputLabel: "Thirty-day synthetic export",
-  inputHint: "The same normalized CSV and JSON records are evaluated by product.py.",
-  inputValue: "30-day synthetic HealthKit-style weight and nutrition CSV: 82.00→79.68 kg.\nStrong CSV: Bench Press 75×6→77.5×6; Deadlift 130×4→137.5×4; Squat 100×5→105×5.\nBody scans: 23.4%→21.8% body fat; 62.8→63.0 kg lean mass.",
+  inputHint: "These exact normalized CSV and JSON records are evaluated by product.py.",
+  inputValue: `Daily synthetic export:
+${dailyRows.join("\n")}
+
+Strong workout export:
+${workoutsFixture}
+
+Body scans:
+${bodyFixture}`,
   actionLabel: "Reveal verified result",
   status: "FAT_LOSS_WITH_STRENGTH_PRESERVED",
   statusTone: "good",

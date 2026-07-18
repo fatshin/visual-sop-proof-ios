@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Starter Project",
-  description: "A clean starting point for building your site.",
+  title: "Body Recomposition Evidence Engine",
+  description: "Separate useful fat loss from weight loss alone with local evidence.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
