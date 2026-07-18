@@ -30,11 +30,17 @@ across 20 fixed evaluation cases.
 
 ## OpenAI and Codex
 
-Codex was used to build the optimizer and review the metric contract. GPT-5.6,
-Terra, and Luna are represented by fixed evaluation observations in the offline
-demo. A production version would ingest measured API usage and grader results.
+I used Codex with GPT-5.6 to build the exhaustive optimizer, strengthen the
+metric contract, add input-mutation tests, create the public interface, and
+review the cost claims. GPT-5.6, Terra, and Luna are represented by fixed
+synthetic evaluation observations in the submitted fixture. A production
+version would ingest measured API usage and grader results.
 
 ## Limits
 
 The costs are normalized demo values, not current billing quotes. The optimizer
 does not predict future quality or route live production traffic.
+
+## License
+
+This project and its synthetic benchmark are released under the MIT License.
