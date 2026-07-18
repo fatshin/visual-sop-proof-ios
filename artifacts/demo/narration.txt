@@ -1,0 +1,2 @@
+Thesis Breaker Japan looks for the evidence that disproves an investment thesis before the evidence that supports it. The fixture contains three explicit theses and three normalized quarters with page-level sources. Running the evaluator breaks the overseas-revenue thesis after two consecutive declines, while the margin and free-cash-flow theses remain intact. GPT-5.6 can extract candidate claims from normalized filings, but deterministic falsification rules decide status. This product does not provide financial advice or place trades.
+
