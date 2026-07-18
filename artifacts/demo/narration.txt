@@ -1,0 +1,2 @@
+Public Notice Stress Test compares a draft notice with a small authoritative fact record before publication. This notice has conflicting dates, amount, age, residency, and contact information, plus one promise that has no supporting source. Running the check blocks release and returns six precise repairs. Each repair is tied to the source value beside it. GPT-5.6 can simulate likely misreadings and suggest clearer language, while deterministic fact comparison remains the publication gate.
+
