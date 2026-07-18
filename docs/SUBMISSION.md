@@ -13,10 +13,11 @@ assertion per failure.
 
 ## How it was built
 
-Codex implemented trace normalization, causal classification, patch generation,
-fixture evaluation, and the browser experience. GPT-5.6 is intended to explain
-unstructured traces; deterministic checks decide whether regressions cover the
-original failure.
+I used Codex with GPT-5.6 to implement trace normalization, causal
+classification, patch generation, fixture evaluation, and the browser
+experience. A future live path can use GPT-5.6 to explain unstructured traces;
+the public demo uses a tested fixture, and deterministic checks decide whether
+regressions cover the original failure.
 
 ## Proof
 
