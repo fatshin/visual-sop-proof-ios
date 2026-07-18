@@ -1,0 +1,14 @@
+VISUAL SOP PROOF — PACKAGE INSPECTION
+
+Purpose
+Confirm that one outbound package is checked and sealed before dispatch.
+
+Procedure
+1. Compare the package label with work order LOT A-104.
+2. Scan the package QR code and confirm package ID PKG-4821.
+3. Inspect the top and all four sides for dents, tears, or water damage.
+4. Apply the blue security seal across the center seam.
+5. Press Complete after all inspection steps are finished.
+
+Recording guidance
+Keep the label, QR code, package top, all four sides, seal, and completion control visible to the camera. If a required surface is outside the frame, the result must be sent for human review.

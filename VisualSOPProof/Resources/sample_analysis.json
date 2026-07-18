@@ -1,0 +1,117 @@
+{
+  "runID": "sample-replay-2026-07-18",
+  "mode": "sample_replay",
+  "modelID": "curated-fixture-v1",
+  "requestID": "not-a-live-openai-response",
+  "createdAtISO": "2026-07-18T09:00:00+09:00",
+  "sopSHA256": "b45c86a77ebbba23f6aef88080fd7cb0f967b49d188e05ae02b751df9716c74a",
+  "videoSHA256": "b580b52e1a951930d9416a2ac45a03b290f8c31dfa5cd45a249fc08c82ebb103",
+  "compiledSOPSHA256": "79fefb155cf6441493ea51753a83325314bd7fbdbcee7b8afa2cb8bed9c33ad9",
+  "samplingVersion": "curated-evidence-v1-2026-07-18",
+  "frames": [
+    {
+      "id": "frame_000",
+      "requestedTime": 2.0,
+      "actualTime": 2.0,
+      "fileName": "sample_frames/frame_000.jpg",
+      "sha256": "2595753081bbc9085ee650aa9b56d5bd3a11c2985ca6b298f91cff01c9f1de85"
+    },
+    {
+      "id": "frame_001",
+      "requestedTime": 7.0,
+      "actualTime": 7.0,
+      "fileName": "sample_frames/frame_001.jpg",
+      "sha256": "5c8735c06046febf449ddb9da5925f8b056bea56b7e27955fd8e4a2347693d6b"
+    },
+    {
+      "id": "frame_002",
+      "requestedTime": 12.0,
+      "actualTime": 12.0,
+      "fileName": "sample_frames/frame_002.jpg",
+      "sha256": "8dc98090cfbb44f45eef7c7af6b6220e02490881bb59373b5cbc774365c10ad6"
+    },
+    {
+      "id": "frame_003",
+      "requestedTime": 17.0,
+      "actualTime": 17.0,
+      "fileName": "sample_frames/frame_003.jpg",
+      "sha256": "b24c653f86e5729b5318a121c775af61cf44c5ed9179c4adb103c987b1209993"
+    },
+    {
+      "id": "frame_004",
+      "requestedTime": 22.0,
+      "actualTime": 22.0,
+      "fileName": "sample_frames/frame_004.jpg",
+      "sha256": "67ce8908507c330fe748675121b8c2c8a783745ae6f9bf7d07f31ac6f4589970"
+    },
+    {
+      "id": "frame_005",
+      "requestedTime": 27.0,
+      "actualTime": 27.0,
+      "fileName": "sample_frames/frame_005.jpg",
+      "sha256": "1408d1cf24a8968d3a305c3497c3a82b3c118f8771481a046a444a6c128c69e6"
+    }
+  ],
+  "results": [
+    {
+      "stepID": "step_1",
+      "status": "verified",
+      "supportingFrameIDs": ["frame_000"],
+      "contradictingFrameIDs": [],
+      "contextFrameIDs": [],
+      "observedFacts": ["The frame shows the label confirmation and work order LOT A-104."],
+      "missingViewCodes": [],
+      "coverage": "Label and order identifier are visible in the sampled frame.",
+      "confidence": "high",
+      "reviewReason": ""
+    },
+    {
+      "stepID": "step_2",
+      "status": "verified",
+      "supportingFrameIDs": ["frame_001"],
+      "contradictingFrameIDs": [],
+      "contextFrameIDs": [],
+      "observedFacts": ["The frame shows the QR-read confirmation for PKG-4821."],
+      "missingViewCodes": [],
+      "coverage": "QR confirmation is visible in the sampled frame.",
+      "confidence": "high",
+      "reviewReason": ""
+    },
+    {
+      "stepID": "step_3",
+      "status": "not_evidenced",
+      "supportingFrameIDs": [],
+      "contradictingFrameIDs": [],
+      "contextFrameIDs": ["frame_002", "frame_003"],
+      "observedFacts": ["Only a top-view state is visible; no sampled frame shows all four side surfaces."],
+      "missingViewCodes": ["front", "back", "left_side", "right_side"],
+      "coverage": "Frames at 00:12 and 00:17 cover the inspection interval but omit side views.",
+      "confidence": "high",
+      "reviewReason": "The side inspection is not evidenced in sampled frames. Human review is required before treating the step as omitted."
+    },
+    {
+      "stepID": "step_4",
+      "status": "verified",
+      "supportingFrameIDs": ["frame_004"],
+      "contradictingFrameIDs": [],
+      "contextFrameIDs": [],
+      "observedFacts": ["A blue seal is shown across the center seam."],
+      "missingViewCodes": [],
+      "coverage": "Final seal placement is visible.",
+      "confidence": "high",
+      "reviewReason": ""
+    },
+    {
+      "stepID": "step_5",
+      "status": "verified",
+      "supportingFrameIDs": ["frame_005"],
+      "contradictingFrameIDs": [],
+      "contextFrameIDs": [],
+      "observedFacts": ["The inspection-complete state is shown after sealing."],
+      "missingViewCodes": [],
+      "coverage": "Completion appears after the seal evidence.",
+      "confidence": "high",
+      "reviewReason": ""
+    }
+  ]
+}

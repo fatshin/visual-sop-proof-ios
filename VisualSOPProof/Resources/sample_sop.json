@@ -1,0 +1,46 @@
+{
+  "title": "Outbound Package Inspection — LOT A-104",
+  "sourceFileName": "sample-sop.pdf",
+  "steps": [
+    {
+      "id": "step_1",
+      "order": 1,
+      "title": "Verify package label",
+      "observableCriteria": "The label and work order LOT A-104 are visible together and compared.",
+      "requiredViews": ["package_label", "work_order"],
+      "riskNote": "Small label text can be missed; keep the label close to camera."
+    },
+    {
+      "id": "step_2",
+      "order": 2,
+      "title": "Read the QR code",
+      "observableCriteria": "The package QR is presented and package ID PKG-4821 is confirmed.",
+      "requiredViews": ["qr_code", "scan_confirmation"],
+      "riskNote": "A brief QR presentation can fall between sampled frames."
+    },
+    {
+      "id": "step_3",
+      "order": 3,
+      "title": "Inspect all package surfaces",
+      "observableCriteria": "The top and all four side surfaces are each brought into view for damage inspection.",
+      "requiredViews": ["top", "front", "back", "left_side", "right_side"],
+      "riskNote": "Side views are commonly omitted or left outside the camera frame."
+    },
+    {
+      "id": "step_4",
+      "order": 4,
+      "title": "Apply the security seal",
+      "observableCriteria": "A blue security seal is visibly applied across the center seam.",
+      "requiredViews": ["center_seam", "security_seal"],
+      "riskNote": "The final seal position must remain visible."
+    },
+    {
+      "id": "step_5",
+      "order": 5,
+      "title": "Complete the inspection",
+      "observableCriteria": "The Complete control is pressed after the preceding evidence.",
+      "requiredViews": ["complete_control", "completion_state"],
+      "riskNote": "Completion must occur after sealing."
+    }
+  ]
+}

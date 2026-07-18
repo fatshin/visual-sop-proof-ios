@@ -1,0 +1,9 @@
+.DS_Store
+DerivedData/
+build/
+.runtime/
+__pycache__/
+*.pyc
+*.xcuserstate
+xcuserdata/
+VisualSOPProof.xcodeproj/
