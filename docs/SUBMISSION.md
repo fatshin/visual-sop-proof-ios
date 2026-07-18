@@ -25,6 +25,7 @@ original failure.
 
 - Live product: https://agent-autopsy.fatshin.chatgpt.site
 - Source: https://github.com/fatshin/agent-autopsy
+- Devpost draft: https://devpost.com/software/agent-autopsy
 - Video: `UPLOAD_TO_YOUTUBE_AND_REPLACE`
 
 ## Limits
