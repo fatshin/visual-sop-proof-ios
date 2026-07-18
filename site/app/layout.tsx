@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Starter Project",
-  description: "A clean starting point for building your site.",
+  title: "Agent Policy Compiler",
+  description: "Compile policy prose into source-linked agent decisions.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

@@ -31,9 +31,17 @@ class ProductTests(unittest.TestCase):
 
     def test_public_fixture_matches_engine_fixture(self):
         site = Path("site/app/product-data.ts").read_text()
-        self.assertIn("POL-01: External transmissions containing PII", site)
-        self.assertIn("$500", site)
-        self.assertNotIn("Gift-card", site)
+        result = product.analyze({field.name: field.value for field in product.PRODUCT.fields})
+        for line in product.POLICY.splitlines():
+            self.assertIn(line, site)
+        for scenario in __import__("json").loads(product.SCENARIOS):
+            self.assertIn(f'"id":"{scenario["id"]}"', site)
+            self.assertIn(f'"tool":"{scenario["tool"]}"', site)
+        self.assertIn(result["status"], site)
+        self.assertIn('value: "3 / 2 / 2"', site)
+        self.assertIn("S2 is blocked by POL-01", site)
+        self.assertIn("S4 crosses the $500 threshold", site)
+        self.assertIn("S5 is outside the support role allowlist", site)
 
 
 if __name__ == "__main__":
