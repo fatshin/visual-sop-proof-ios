@@ -2,6 +2,9 @@
 
 **Tagline:** Distinguish useful fat loss from weight loss alone.
 
+**Category:** Apps for Your Life  
+**Codex Session ID:** `019f7306-7262-7371-a03f-6b99df7129bf`
+
 ## What it does
 
 The engine combines normalized HealthKit-style activity, three strength
