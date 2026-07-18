@@ -25,6 +25,7 @@ explanation after local aggregation; raw health data remains local.
 
 - Live product: https://body-recomposition-evidence.fatshin.chatgpt.site
 - Source: https://github.com/fatshin/body-recomposition-evidence-engine
+- Devpost draft: https://devpost.com/software/body-recomposition-evidence-engine
 - Video: `UPLOAD_TO_YOUTUBE_AND_REPLACE`
 
 ## Limits
