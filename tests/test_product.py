@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 
 import product
 from runtime.server import page, result_markup
@@ -14,7 +15,12 @@ class ProductTests(unittest.TestCase):
         self.assertIn(product.PRODUCT.name, page())
         self.assertNotIn("<script>", result_markup({"status": "<script>", "headline": "safe", "metrics": {}, "items": [], "evidence": [], "artifact": {}}))
 
+    def test_public_fixture_matches_engine_fixture(self):
+        site = Path("site/app/product-data.ts").read_text()
+        self.assertIn("Emergency Support Benefit", site)
+        self.assertIn("2026-08-31", site)
+        self.assertNotIn("Service was fully restored", site)
+
 
 if __name__ == "__main__":
     unittest.main()
-

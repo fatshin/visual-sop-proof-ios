@@ -2,6 +2,9 @@
 
 **Tagline:** Catch the sentence that should stop a public release.
 
+**Category:** Work & Productivity  
+**Codex Session ID:** `019f7306-7262-7371-a03f-6b99df7129bf`
+
 ## What it does
 
 The product breaks a public notice into factual claims, compares each claim with
