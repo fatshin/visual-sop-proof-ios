@@ -31,11 +31,17 @@ precision, recall, and F1 over 20 labeled cases.
 
 ## OpenAI and Codex
 
-Codex was used to implement and test the taxonomy. GPT-5.6 can provide richer
-reasoning classification and varied counterexamples, while the fixed labeled
-set remains the submitted quality gate.
+I used Codex with GPT-5.6 to implement the reasoning taxonomy, labeled
+evaluation, input-mutation tests, public interface, and review. A future live
+path can use GPT-5.6 for richer reasoning classification and varied
+counterexamples, while the fixed labeled set remains the submitted quality
+gate.
 
 ## Limits
 
 The MVP covers fraction addition and three reasoning states. It is not a
 general student assessment or a substitute for a teacher.
+
+## License
+
+This project and its synthetic learner responses are released under the MIT License.
