@@ -1,5 +1,7 @@
 # Agent Policy Compiler
 
+[Live demo](https://agent-policy-compiler.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/agent-policy-compiler)
+
 Agent Policy Compiler turns a short operating policy into an inspectable policy
 IR, then evaluates runtime tool calls as `ALLOW`, `BLOCK`, or
 `APPROVAL_REQUIRED`. Every non-allow decision carries the policy sentence that
@@ -43,4 +45,3 @@ without credentials.
 
 This MVP deliberately supports three rule families. It is a policy compiler
 proof, not a general authorization system or a production policy engine.
-
