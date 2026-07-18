@@ -1,5 +1,7 @@
 # Meeting to Merge
 
+[Live demo](https://meeting-to-merge.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/meeting-to-merge)
+
 Meeting to Merge carries four cited meeting requirements into failing test
 names and a minimal proposed diff. A human approval boundary remains between
 the proposal and repository mutation.
@@ -38,4 +40,3 @@ citations, ambiguity handling, and the human-apply boundary.
 
 The MVP operates on a bounded source snippet. It does not edit a live
 repository, infer unstated product decisions, or claim a simulated rerun is CI.
-
