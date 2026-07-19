@@ -42,6 +42,6 @@ ${csvRows.join("\n")}`,
     { step: "02", title: "Enumerate", detail: "Search complete routing combinations instead of hand-picking a winner." },
     { step: "03", title: "Select", detail: "Choose the lowest measured cost among routes that pass every constraint." },
   ],
-  proof: ["Complete per-case model coverage", "91-point macro-average floor", "Exhaustive route search"],
+  proof: ["Exactly 20 single-task cases", "Quality bounded to 0–100", "Positive baseline cost"],
   note: "Costs and scores are a reproducible synthetic benchmark, not a universal model-price claim.",
 };

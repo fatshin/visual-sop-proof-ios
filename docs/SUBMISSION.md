@@ -20,7 +20,8 @@ fixed synthetic scores and does not make live model calls.
 
 ## Proof
 
-- 20 cases with a 91-point three-task macro-average floor
+- exactly 20 single-task cases with quality bounded to 0–100
+- positive GPT-5.6 baseline cost and a 91-point macro-average floor
 - selected route has a 91.5 macro-average with complete task-model coverage
 - selected route costs 3.0 normalized units per three-task bundle
 - 61% fixture cost reduction versus the GPT-5.6-only fixture

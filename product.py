@@ -51,7 +51,12 @@ def parse_rows(raw: str) -> list[dict[str, Any]]:
             quality, cost = float(row["quality"]), float(row["cost"])
         except ValueError as error:
             raise InvalidBenchmarkError(f"Non-numeric quality or cost on CSV line {line_number}") from error
-        if not math.isfinite(quality) or not math.isfinite(cost) or cost < 0:
+        if (
+            not math.isfinite(quality)
+            or not 0 <= quality <= 100
+            or not math.isfinite(cost)
+            or cost < 0
+        ):
             raise InvalidBenchmarkError(f"Invalid quality or cost on CSV line {line_number}")
         rows.append({**row, "quality": quality, "cost": cost})
     if not rows:
@@ -71,6 +76,22 @@ def validate_matrix(rows: list[dict[str, Any]]) -> None:
     if observed_models != expected_models:
         raise InvalidBenchmarkError(
             f"Model set must be {sorted(expected_models)}; got {sorted(observed_models)}"
+        )
+    case_ids = {row["case_id"] for row in rows}
+    if len(case_ids) != 20:
+        raise InvalidBenchmarkError(
+            f"Benchmark must contain exactly 20 case IDs; got {len(case_ids)}"
+        )
+    tasks_by_case: dict[str, set[str]] = {}
+    for row in rows:
+        tasks_by_case.setdefault(row["case_id"], set()).add(row["task"])
+    multi_task_cases = sorted(
+        case_id for case_id, tasks in tasks_by_case.items() if len(tasks) != 1
+    )
+    if multi_task_cases:
+        raise InvalidBenchmarkError(
+            "Each case ID must map to exactly one task: "
+            + ", ".join(multi_task_cases)
         )
     observed_cells = {(row["task"], row["model"]) for row in rows}
     missing_cells = sorted(
@@ -122,6 +143,14 @@ def optimize(rows: list[dict[str, Any]], floor: float) -> dict[str, Any]:
         totals[key][0] += row["quality"]
         totals[key][1] += row["cost"]
     averages = {key: [value / counts[key] for value in values] for key, values in totals.items()}
+    baseline_values = [averages[(task, "gpt-5.6")] for task in tasks]
+    baseline = {
+        "route": {task: "gpt-5.6" for task in tasks},
+        "quality": round(sum(item[0] for item in baseline_values) / len(tasks), 2),
+        "cost": round(sum(item[1] for item in baseline_values), 2),
+    }
+    if baseline["cost"] <= 0:
+        raise InvalidBenchmarkError("GPT-5.6 baseline bundle cost must be greater than zero")
     candidates = []
     for choice in itertools.product(models, repeat=len(tasks)):
         route = dict(zip(tasks, choice, strict=True))
@@ -131,8 +160,6 @@ def optimize(rows: list[dict[str, Any]], floor: float) -> dict[str, Any]:
     if not feasible:
         raise NoFeasibleRouteError("No route meets the quality floor")
     best = min(feasible, key=lambda item: (item["cost"], -item["quality"]))
-    baseline_values = [averages[(task, "gpt-5.6")] for task in tasks]
-    baseline = {"route": {task: "gpt-5.6" for task in tasks}, "quality": round(sum(item[0] for item in baseline_values) / len(tasks), 2), "cost": round(sum(item[1] for item in baseline_values), 2)}
     return {"best": best, "baseline": baseline, "frontier": sorted(feasible, key=lambda item: (item["cost"], -item["quality"]))[:5], "cases": len({row["case_id"] for row in rows})}
 
 
@@ -140,8 +167,8 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
     try:
         rows = parse_rows(payload["results"])
         floor = float(payload["quality_floor"])
-        if not math.isfinite(floor):
-            raise ValueError("Quality floor must be finite")
+        if not math.isfinite(floor) or not 0 <= floor <= 100:
+            raise ValueError("Quality floor must be finite and between 0 and 100")
         result = optimize(rows, floor)
     except InvalidBenchmarkError as error:
         return {

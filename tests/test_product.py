@@ -28,7 +28,9 @@ class ProductTests(unittest.TestCase):
         self.assertIn("95.17", site)
         self.assertIn("7.7", site)
         self.assertNotIn("escalation", site.lower())
-        self.assertIn("Complete per-case model coverage", site)
+        self.assertIn("Exactly 20 single-task cases", site)
+        self.assertIn("Quality bounded to 0–100", site)
+        self.assertIn("Positive baseline cost", site)
 
     def test_higher_quality_floor_changes_selected_route(self):
         result = product.analyze({"quality_floor": "93", "results": product.CSV_DATA})
@@ -70,7 +72,7 @@ class ProductTests(unittest.TestCase):
         self.assertIn("Duplicate case-task-model rows", result["headline"])
 
     def test_unreachable_floor_returns_no_feasible_route(self):
-        result = product.analyze({"quality_floor": "101", "results": product.CSV_DATA})
+        result = product.analyze({"quality_floor": "100", "results": product.CSV_DATA})
         self.assertEqual(result["status"], "NO_FEASIBLE_ROUTE")
         self.assertEqual(result["items"], [])
 
@@ -78,6 +80,8 @@ class ProductTests(unittest.TestCase):
         result = product.analyze({"quality_floor": "not-a-number", "results": product.CSV_DATA})
         self.assertEqual(result["status"], "INVALID_BENCHMARK")
         result = product.analyze({"quality_floor": "nan", "results": product.CSV_DATA})
+        self.assertEqual(result["status"], "INVALID_BENCHMARK")
+        result = product.analyze({"quality_floor": "101", "results": product.CSV_DATA})
         self.assertEqual(result["status"], "INVALID_BENCHMARK")
 
     def test_non_finite_or_negative_measurements_are_invalid(self):
@@ -91,6 +95,45 @@ class ProductTests(unittest.TestCase):
             product.analyze({"quality_floor": "91", "results": negative})["status"],
             "INVALID_BENCHMARK",
         )
+        out_of_range = product.CSV_DATA.replace(",96,2.10", ",101,2.10", 1)
+        self.assertEqual(
+            product.analyze({"quality_floor": "91", "results": out_of_range})["status"],
+            "INVALID_BENCHMARK",
+        )
+
+    def test_runtime_requires_exactly_twenty_cases(self):
+        rows = [
+            line for line in product.CSV_DATA.splitlines()
+            if not line.startswith("C20,")
+        ]
+        result = product.analyze(
+            {"quality_floor": "91", "results": "\n".join(rows)}
+        )
+        self.assertEqual(result["status"], "INVALID_BENCHMARK")
+        self.assertIn("exactly 20 case IDs", result["headline"])
+
+    def test_each_case_id_maps_to_exactly_one_task(self):
+        mutated = product.CSV_DATA.replace(
+            "C01,extract,luna,90,0.40",
+            "C01,reason,luna,84,0.70",
+        )
+        result = product.analyze({"quality_floor": "91", "results": mutated})
+        self.assertEqual(result["status"], "INVALID_BENCHMARK")
+        self.assertIn("exactly one task", result["headline"])
+
+    def test_zero_baseline_bundle_cost_is_invalid(self):
+        rows = []
+        for line in product.CSV_DATA.splitlines():
+            parts = line.split(",")
+            if len(parts) == 5 and parts[2] == "gpt-5.6":
+                parts[4] = "0"
+                line = ",".join(parts)
+            rows.append(line)
+        result = product.analyze(
+            {"quality_floor": "91", "results": "\n".join(rows)}
+        )
+        self.assertEqual(result["status"], "INVALID_BENCHMARK")
+        self.assertIn("baseline bundle cost", result["headline"])
 
     def test_metric_names_state_their_actual_grain(self):
         result = product.analyze({field.name: field.value for field in product.PRODUCT.fields})
