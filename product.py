@@ -39,9 +39,18 @@ def compile_policy(policy: str) -> dict[str, Any]:
         match = re.match(r"(POL-\d+):\s*(.+)", line.strip())
         if match:
             citations[match.group(1)] = match.group(2)
-    threshold_match = re.search(r"Refunds above \$([0-9]+(?:\.[0-9]+)?)", policy, re.IGNORECASE)
+    pii_match = re.search(
+        r"(?im)^POL-01:\s*External transmissions containing PII must be blocked\.$",
+        policy,
+    )
+    if not pii_match:
+        raise ValueError("Ambiguous policy: POL-01 must use the supported PII-block grammar.")
+    threshold_match = re.search(
+        r"(?im)^POL-02:\s*Refunds above \$([0-9]+(?:\.[0-9]+)?) and production deletion require human approval\.$",
+        policy,
+    )
     if not threshold_match:
-        raise ValueError("Ambiguous policy: refund approval threshold is missing.")
+        raise ValueError("Ambiguous policy: POL-02 must use the supported approval grammar.")
     allowlists: dict[str, list[str]] = {}
     role_rule_ids: dict[str, str] = {}
     for rule_id, role, tools in re.findall(
@@ -62,7 +71,7 @@ def compile_policy(policy: str) -> dict[str, Any]:
         role_rule_ids["admin"] = admin_match.group(1)
     if set(allowlists) != {"support", "finance", "admin"}:
         raise ValueError("Ambiguous policy: one or more role tool lists could not be compiled.")
-    approval_tools = ["delete_production"] if "production deletion" in policy.lower() else []
+    approval_tools = ["delete_production"]
     return {
         "version": "policy-ir/v1",
         "refund_approval_above": float(threshold_match.group(1)),

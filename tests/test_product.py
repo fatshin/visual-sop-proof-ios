@@ -43,6 +43,18 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(above_threshold["decision"], "APPROVAL_REQUIRED")
         self.assertEqual(above_threshold["reason"], ir["citations"]["POL-02"])
 
+    def test_inverted_policy_polarity_fails_closed(self):
+        allowed_pii = product.POLICY.replace("must be blocked", "must be allowed")
+        with self.assertRaisesRegex(ValueError, "POL-01"):
+            product.compile_policy(allowed_pii)
+
+        no_approval = product.POLICY.replace(
+            "production deletion require human approval",
+            "production deletion never requires human approval",
+        )
+        with self.assertRaisesRegex(ValueError, "POL-02"):
+            product.compile_policy(no_approval)
+
     def test_every_non_allow_decision_has_an_exact_source_citation(self):
         result = product.analyze(
             {field.name: field.value for field in product.PRODUCT.fields}
