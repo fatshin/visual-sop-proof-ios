@@ -27,15 +27,15 @@ Quarterly evidence:
   statusTone: "warn",
   metrics: [{ value: "3", label: "theses checked" }, { value: "1", label: "broken" }, { value: "3", label: "page citations" }],
   findings: [
-    { title: "T-1 is broken", detail: "Overseas revenue ratio falls 42→40→37 across two consecutive periods.", badge: "BROKEN", tone: "bad" },
+    { title: "T-1 is broken and shown first", detail: "Overseas revenue ratio falls 42→40→37. Reversal requires two consecutive rises; one rebound is insufficient.", badge: "BROKEN", tone: "bad" },
     { title: "T-2 remains intact", detail: "Latest operating margin is 13.2%, above the 12% floor.", badge: "INTACT", tone: "good" },
     { title: "T-3 remains intact", detail: "Latest free cash flow is 440, above the zero floor.", badge: "INTACT", tone: "good" },
   ],
   method: [
     { step: "01", title: "Specify", detail: "Turn each investment belief into a claim with a measurable break condition." },
     { step: "02", title: "Cite", detail: "Connect reported evidence to the exact document page used in the check." },
-    { step: "03", title: "Challenge", detail: "Flag crossed triggers and show what evidence would confirm or reverse the result." },
+    { step: "03", title: "Challenge", detail: "Sort broken theses first and state the exact evidence required to reverse each result." },
   ],
-  proof: ["Explicit break conditions", "Two-period trigger", "Document page citations"],
+  proof: ["BROKEN-first ordering", "Break and reversal conditions", "Validated page citations"],
   note: "This is a synthetic demonstration and not investment advice. Verify all filings independently before acting.",
 };

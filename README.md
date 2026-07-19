@@ -4,7 +4,8 @@
 
 Thesis Breaker Japan searches normalized quarterly evidence for conditions
 that disconfirm a Japanese-equity investment thesis. Broken theses appear
-before intact ones and retain a page-level source reference.
+before intact ones regardless of input order. Every assessment retains a
+validated local page reference and states both break and reversal conditions.
 
 ## Judge path
 
@@ -12,15 +13,18 @@ before intact ones and retain a page-level source reference.
 2. Open `http://127.0.0.1:8110`.
 3. Select **Run analysis**.
 4. Confirm one of three theses is broken.
-5. Expand `T-1` and inspect the two consecutive declines and its source page.
+5. Expand `T-1` and inspect the two consecutive declines, reversal condition,
+   and all three source pages.
 
 ## What is implemented
 
 - three explicit theses and falsification rules;
 - normalized three-quarter evidence;
+- strict `YYYY-Qn` validation, chronological sorting, and duplicate rejection;
 - consecutive-decline and numeric-floor evaluators;
-- disconfirming-evidence-first output;
-- source references and a financial-advice disclaimer.
+- stable disconfirming-evidence-first output;
+- validated source-file/page anchors, reversal conditions, and a
+  financial-advice disclaimer.
 
 ## Verification
 
