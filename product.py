@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 from typing import Any
 
@@ -21,6 +22,14 @@ SCENARIOS = json.dumps([
     {"id": "S6", "role": "admin", "tool": "delete_production", "external": False, "pii": False, "amount": 0},
     {"id": "S7", "role": "admin", "tool": "rotate_logs", "external": False, "pii": False, "amount": 0},
 ], indent=2)
+REGISTERED_TOOLS = {
+    "lookup_customer",
+    "draft_reply",
+    "issue_refund",
+    "send_email",
+    "delete_production",
+    "rotate_logs",
+}
 PRODUCT = Product(
     1, "agent-policy-compiler", "Agent Policy Compiler",
     "Turn natural-language operating rules into testable agent decisions.",
@@ -78,6 +87,7 @@ def compile_policy(policy: str) -> dict[str, Any]:
         "role_allowlists": allowlists,
         "role_rule_ids": role_rule_ids,
         "approval_tools": approval_tools,
+        "registered_tools": sorted(REGISTERED_TOOLS),
         "rules": [
             {"id": "POL-01", "predicate": "external && pii", "effect": "BLOCK"},
             {
@@ -99,11 +109,23 @@ def compile_policy(policy: str) -> dict[str, Any]:
 
 
 def evaluate(ir: dict[str, Any], scenario: dict[str, Any]) -> dict[str, str]:
+    amount = scenario.get("amount", 0)
+    if isinstance(amount, bool) or not isinstance(amount, (int, float)):
+        raise ValueError("Invalid scenario amount: expected a finite number")
+    try:
+        numeric_amount = float(amount)
+    except OverflowError as error:
+        raise ValueError(
+            "Invalid scenario amount: expected a finite number"
+        ) from error
+    if not math.isfinite(numeric_amount):
+        raise ValueError("Invalid scenario amount: expected a finite number")
     if scenario.get("external") and scenario.get("pii"):
         return {"decision": "BLOCK", "rule": "POL-01", "reason": ir["citations"]["POL-01"]}
     role, tool = str(scenario.get("role", "")), str(scenario.get("tool", ""))
     allowed = set(ir["role_allowlists"].get(role, []))
-    if "*" not in allowed and tool not in allowed:
+    tool_registered = tool in set(ir["registered_tools"])
+    if not tool_registered or ("*" not in allowed and tool not in allowed):
         rule_id = ir["role_rule_ids"].get(role)
         if not rule_id:
             raise ValueError(f"Unknown role: {role or 'MISSING'}")
@@ -113,7 +135,7 @@ def evaluate(ir: dict[str, Any], scenario: dict[str, Any]) -> dict[str, str]:
             "reason": ir["citations"][rule_id],
         }
     if (
-        float(scenario.get("amount", 0)) > ir["refund_approval_above"]
+        numeric_amount > ir["refund_approval_above"]
         or tool in ir["approval_tools"]
     ):
         return {"decision": "APPROVAL_REQUIRED", "rule": "POL-02", "reason": ir["citations"]["POL-02"]}
@@ -122,13 +144,36 @@ def evaluate(ir: dict[str, Any], scenario: dict[str, Any]) -> dict[str, str]:
 
 def analyze(payload: dict[str, str]) -> dict[str, Any]:
     ir = compile_policy(payload["policy"])
-    decisions = [{**item, **evaluate(ir, item)} for item in json.loads(payload["scenarios"])]
+    scenarios = json.loads(payload["scenarios"])
+    if not isinstance(scenarios, list):
+        return invalid_input_result("Scenarios must be a JSON array")
+    try:
+        decisions = [
+            {**item, **evaluate(ir, item)}
+            for item in scenarios
+            if isinstance(item, dict)
+        ]
+    except ValueError as error:
+        return invalid_input_result(str(error))
+    if len(decisions) != len(scenarios):
+        return invalid_input_result("Every scenario must be a JSON object")
     counts = {name: sum(item["decision"] == name for item in decisions) for name in ("ALLOW", "BLOCK", "APPROVAL_REQUIRED")}
     return {
         "status": "COMPILED", "headline": f"{len(decisions)} scenarios evaluated with source-linked rules",
         "metrics": counts, "items": decisions,
         "evidence": [{"label": key, "value": value} for key, value in ir["citations"].items()],
         "artifact": ir,
+    }
+
+
+def invalid_input_result(message: str) -> dict[str, Any]:
+    return {
+        "status": "INVALID_INPUT",
+        "headline": message,
+        "metrics": {"ALLOW": 0, "BLOCK": 0, "APPROVAL_REQUIRED": 0},
+        "items": [],
+        "evidence": [],
+        "artifact": {"input_errors": [message]},
     }
 
 

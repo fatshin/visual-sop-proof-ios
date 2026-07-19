@@ -43,6 +43,34 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(above_threshold["decision"], "APPROVAL_REQUIRED")
         self.assertEqual(above_threshold["reason"], ir["citations"]["POL-02"])
 
+    def test_non_finite_or_non_numeric_amount_is_invalid_input(self):
+        for amount in (float("nan"), float("inf"), "900", True):
+            scenarios = __import__("json").loads(product.SCENARIOS)
+            scenarios[3]["amount"] = amount
+            result = product.analyze(
+                {
+                    "policy": product.POLICY,
+                    "scenarios": __import__("json").dumps(scenarios),
+                }
+            )
+            self.assertEqual(result["status"], "INVALID_INPUT")
+            self.assertEqual(result["items"], [])
+
+    def test_admin_cannot_use_an_unregistered_tool(self):
+        ir = product.compile_policy(product.POLICY)
+        result = product.evaluate(
+            ir,
+            {"role": "admin", "tool": "exfiltrate_database", "amount": 0},
+        )
+        self.assertEqual(result["decision"], "BLOCK")
+        self.assertEqual(result["rule"], "POL-05")
+
+        registered = product.evaluate(
+            ir,
+            {"role": "admin", "tool": "rotate_logs", "amount": 0},
+        )
+        self.assertEqual(registered["decision"], "ALLOW")
+
     def test_inverted_policy_polarity_fails_closed(self):
         allowed_pii = product.POLICY.replace("must be blocked", "must be allowed")
         with self.assertRaisesRegex(ValueError, "POL-01"):
