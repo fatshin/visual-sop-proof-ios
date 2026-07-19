@@ -7,8 +7,8 @@
 
 ## What it does
 
-Agent Autopsy reconstructs a failed trace, separates the first causal mistake
-from downstream symptoms, proposes the smallest patch, and emits one regression
+Agent Autopsy reconstructs a failed trace, identifies deterministic failure
+modes, proposes a bounded patch for each detector, and emits one regression
 assertion per failure.
 
 ## How it was built

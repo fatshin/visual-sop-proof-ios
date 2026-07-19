@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from collections import Counter
 from typing import Any
 
@@ -38,6 +39,47 @@ def validate_sequence(events: list[dict[str, Any]]) -> None:
         )
 
 
+def validate_event_schema(events: Any) -> None:
+    if not isinstance(events, list) or not events:
+        raise ValueError("Trace must be a non-empty JSON array")
+    for index, event in enumerate(events, start=1):
+        if not isinstance(event, dict):
+            raise ValueError(f"Trace event {index} must be a JSON object")
+        event_type = event.get("type")
+        if event_type not in {"context", "tool"}:
+            raise ValueError(
+                f"Trace event {index} has unsupported type: {event_type or 'MISSING'}"
+            )
+        if event_type == "context":
+            customer_id = event.get("customer_id")
+            if not isinstance(customer_id, str) or not customer_id.strip():
+                raise ValueError(f"Context event {index} requires a customer_id")
+            if "verified" in event and not isinstance(event["verified"], bool):
+                raise ValueError(f"Context event {index} has invalid verified flag")
+            continue
+        if not isinstance(event.get("name"), str) or not event["name"].strip():
+            raise ValueError(f"Tool event {index} requires a tool name")
+        args = event.get("args")
+        if not isinstance(args, dict):
+            raise ValueError(f"Tool event {index} requires an args object")
+        if event["name"] == "issue_refund":
+            amount = args.get("amount")
+            if isinstance(amount, bool) or not isinstance(amount, (int, float)):
+                raise ValueError(
+                    f"Refund event {index} requires a finite numeric amount"
+                )
+            try:
+                numeric_amount = float(amount)
+            except OverflowError as error:
+                raise ValueError(
+                    f"Refund event {index} requires a finite numeric amount"
+                ) from error
+            if not math.isfinite(numeric_amount):
+                raise ValueError(
+                    f"Refund event {index} requires a finite numeric amount"
+                )
+
+
 def has_valid_approval(event: dict[str, Any]) -> bool:
     approval = event.get("approval")
     args = event.get("args", {})
@@ -57,6 +99,7 @@ def has_valid_approval(event: dict[str, Any]) -> bool:
 
 
 def diagnose(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    validate_event_schema(events)
     validate_sequence(events)
     findings: list[dict[str, Any]] = []
     verified_customer_ids = {
@@ -154,7 +197,26 @@ def diagnose(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def analyze(payload: dict[str, str]) -> dict[str, Any]:
     events = json.loads(payload["trace"])
-    findings = diagnose(events)
+    try:
+        findings = diagnose(events)
+    except ValueError as error:
+        return {
+            "status": "INVALID_INPUT",
+            "headline": str(error),
+            "metrics": {
+                "trace_events": len(events) if isinstance(events, list) else 0,
+                "findings": 0,
+                "regression_tests": 0,
+            },
+            "items": [],
+            "evidence": [],
+            "artifact": {
+                "reproducer": events,
+                "proposed_patches": [],
+                "rerun": "NOT_RUN",
+                "input_errors": [str(error)],
+            },
+        }
     return {
         "status": "PATCH_READY" if findings else "NO_FAILURE_FOUND",
         "headline": f"{len(findings)} reproducible failure modes isolated",

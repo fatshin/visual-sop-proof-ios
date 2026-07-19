@@ -23,7 +23,7 @@ class ProductTests(unittest.TestCase):
             self.assertIn(f'"seq":{event["seq"]}', site)
         self.assertIn(result["status"], site)
         self.assertIn('value: "5", label: "trace events"', site)
-        self.assertIn('value: "3", label: "root causes"', site)
+        self.assertIn('value: "3", label: "failure modes"', site)
         for title in ("Customer context drift", "Duplicate refund side effect", "$750 limit bypass"):
             self.assertIn(title, site)
 
@@ -121,6 +121,35 @@ class ProductTests(unittest.TestCase):
                 {"seq": 1, "type": "context", "customer_id": "CUS-1", "verified": True},
                 {"seq": 3, "type": "tool", "name": "lookup_customer", "args": {"customer_id": "CUS-1"}},
             ])
+
+    def test_event_type_allowlist_fails_closed(self):
+        events = [
+            {"seq": 1, "type": "context", "customer_id": "CUS-1", "verified": True},
+            {
+                "seq": 2,
+                "type": "TOOL",
+                "name": "issue_refund",
+                "args": {"customer_id": "CUS-1", "amount": 750},
+            },
+        ]
+        result = product.analyze({"trace": json.dumps(events)})
+        self.assertEqual(result["status"], "INVALID_INPUT")
+        self.assertIn("unsupported type", result["headline"])
+
+    def test_refund_amount_must_be_finite_numeric_value(self):
+        for amount in (float("nan"), float("inf"), "750", True):
+            events = [
+                {"seq": 1, "type": "context", "customer_id": "CUS-1", "verified": True},
+                {
+                    "seq": 2,
+                    "type": "tool",
+                    "name": "issue_refund",
+                    "args": {"customer_id": "CUS-1", "amount": amount},
+                },
+            ]
+            result = product.analyze({"trace": json.dumps(events)})
+            self.assertEqual(result["status"], "INVALID_INPUT")
+            self.assertEqual(result["items"], [])
 
     def test_rerun_is_not_claimed_without_execution(self):
         result = product.analyze(
