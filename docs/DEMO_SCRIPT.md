@@ -4,5 +4,5 @@
 2. Select **Run analysis**.
 3. Show twenty cases across five distinct starting problems and the F1 score.
 4. Expand a flagged case and read its misconception-specific counterexample.
-5. Show the different replay problem, answer, reasoning, and `RESOLVED` status.
+5. Show that the replay is mathematically different and its reasoning matches the actual fraction transformation before `RESOLVED`.
 6. State that this verifies the fixed replay, not durable learning.

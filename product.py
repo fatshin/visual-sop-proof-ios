@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 from fractions import Fraction
 from typing import Any
@@ -51,13 +52,66 @@ def classify(reasoning: str) -> str:
 
 
 def answer_is_correct(problem: str, answer: str) -> bool:
-    match = re.fullmatch(r"\s*(\d+/\d+)\s*\+\s*(\d+/\d+)\s*", problem)
-    if not match:
+    operands = problem_operands(problem)
+    if operands is None:
         return False
     try:
-        return Fraction(answer) == Fraction(match.group(1)) + Fraction(match.group(2))
+        return Fraction(answer) == sum(operands, Fraction())
     except (ValueError, ZeroDivisionError):
         return False
+
+
+def problem_operands(problem: str) -> tuple[Fraction, Fraction] | None:
+    match = re.fullmatch(r"\s*(\d+/\d+)\s*\+\s*(\d+/\d+)\s*", problem)
+    if not match:
+        return None
+    try:
+        return Fraction(match.group(1)), Fraction(match.group(2))
+    except (ValueError, ZeroDivisionError):
+        return None
+
+
+def is_different_problem(original: str, replay: str) -> bool:
+    original_operands = problem_operands(original)
+    replay_operands = problem_operands(replay)
+    return (
+        original_operands is not None
+        and replay_operands is not None
+        and sorted(original_operands) != sorted(replay_operands)
+    )
+
+
+def reasoning_supports_answer(problem: str, answer: str, reasoning: str) -> bool:
+    operands = problem_operands(problem)
+    if operands is None or not answer_is_correct(problem, answer):
+        return False
+    left, right = operands
+    denominator = math.lcm(left.denominator, right.denominator)
+    left_numerator = left.numerator * (denominator // left.denominator)
+    right_numerator = right.numerator * (denominator // right.denominator)
+    text = reasoning.lower()
+    if Fraction(answer) == 1:
+        unit_names = {2: "halves", 3: "thirds", 4: "fourths", 5: "fifths"}
+        count_names = {
+            2: ("2", "two", "both"),
+            3: ("3", "three"),
+            4: ("4", "four"),
+            5: ("5", "five"),
+        }
+        unit = unit_names.get(denominator)
+        counts = count_names.get(left_numerator + right_numerator, ())
+        return (
+            unit is not None
+            and unit in text
+            and any(f"{count} {unit}" in text for count in counts)
+            and ("one whole" in text or "make one" in text)
+        )
+    expected_sum = f"{left_numerator}/{denominator} + {right_numerator}/{denominator}"
+    return (
+        f"common denominator is {denominator}" in text
+        and expected_sum in text
+        and answer in text
+    )
 
 
 def counterexample_for(misconception: str, replay_problem: str, replay_answer: str) -> str:
@@ -78,8 +132,15 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
         fp += not expected_positive and predicted_positive
         fn += expected_positive and not predicted_positive
         replay_correct = answer_is_correct(case["replay_problem"], case["replay_answer"])
-        replay_explanation_correct = classify(case["replay_reasoning"]) == "CORRECT"
-        replay_status = "RESOLVED" if replay_correct and replay_explanation_correct else "UNRESOLVED"
+        replay_is_different = is_different_problem(case["problem"], case["replay_problem"])
+        replay_explanation_correct = reasoning_supports_answer(
+            case["replay_problem"], case["replay_answer"], case["replay_reasoning"]
+        )
+        replay_status = (
+            "RESOLVED"
+            if replay_is_different and replay_correct and replay_explanation_correct
+            else "UNRESOLVED"
+        )
         items.append({
             "id": case["id"],
             "problem": case["problem"],
@@ -91,19 +152,36 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
             "replay_problem": case["replay_problem"],
             "replay_answer": case["replay_answer"],
             "replay_reasoning": case["replay_reasoning"],
+            "replay_is_different": replay_is_different,
             "replay_status": replay_status,
         })
     precision, recall = tp / (tp + fp) if tp + fp else 1.0, tp / (tp + fn) if tp + fn else 1.0
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
     flagged = [item for item in items if item["predicted"] not in ("CORRECT", "UNRESOLVED")]
     resolved = sum(item["replay_status"] == "RESOLVED" for item in flagged)
+    exact_classification = all(item["predicted"] == item["expected"] for item in items)
+    expected_misconceptions = sum(item["expected"] != "CORRECT" for item in items)
     return {
-        "status": "EVAL_PASS" if f1 >= 0.8 and resolved == len(flagged) else "EVAL_FAIL",
+        "status": (
+            "EVAL_PASS"
+            if exact_classification
+            and expected_misconceptions == 5
+            and len(flagged) == 5
+            and resolved == len(flagged)
+            else "EVAL_FAIL"
+        ),
         "headline": f"{resolved} of {len(flagged)} detected misconceptions resolved on a different problem",
         "metrics": {"cases": len(cases), "f1": round(f1, 2), "misconceptions": len(flagged), "resolved": resolved, "unique_problems": len({case["problem"] for case in cases})},
         "items": items,
         "evidence": [{"label": "taxonomy", "value": "ADD_BOTH_PARTS · INVERTED_FRACTION · UNRESOLVED"}],
-        "artifact": {"precision": precision, "recall": recall, "f1": f1, "replay_outcomes": {"resolved": resolved, "unresolved": len(flagged) - resolved}},
+        "artifact": {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "exact_classification": exact_classification,
+            "expected_misconceptions": expected_misconceptions,
+            "replay_outcomes": {"resolved": resolved, "unresolved": len(flagged) - resolved},
+        },
     }
 
 
@@ -112,8 +190,16 @@ def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
     checks = {
         "twenty_cases": result["metrics"]["cases"] == 20,
         "five_distinct_problems": result["metrics"]["unique_problems"] >= 5,
-        "f1_target": result["metrics"]["f1"] >= 0.8,
+        "exact_ground_truth": (
+            result["artifact"]["exact_classification"]
+            and result["artifact"]["precision"] == 1.0
+            and result["artifact"]["recall"] == 1.0
+            and result["artifact"]["expected_misconceptions"] == 5
+        ),
         "correct_answer_wrong_reasoning": len(flagged) == 5 and all(item["final_answer_correct"] for item in flagged),
-        "replay_resolved": len(flagged) == 5 and all(item["replay_status"] == "RESOLVED" for item in flagged),
+        "replay_resolved": (
+            len(flagged) == 5
+            and all(item["replay_is_different"] and item["replay_status"] == "RESOLVED" for item in flagged)
+        ),
     }
     return all(checks.values()), checks

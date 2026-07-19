@@ -40,13 +40,13 @@ export const product: Product = {
   findings: [
     { title: "Correct answers, incorrect rule", detail: "Five varied problems hide the same add-both-parts misconception behind a correct final answer.", badge: "MISCONCEPTION", tone: "bad" },
     { title: "Fixed-set F1 is 1.00", detail: "All five ADD_BOTH_PARTS labels are recovered in the twenty-case fixture.", badge: "EVAL", tone: "good" },
-    { title: "A different problem verifies repair", detail: "All five flagged cases answer and explain a targeted replay correctly, producing RESOLVED.", badge: "REPLAY", tone: "good" },
+    { title: "A mathematically different problem verifies repair", detail: "All five flagged cases answer a different fraction problem and give reasoning that matches its actual fraction transformation, producing RESOLVED.", badge: "REPLAY", tone: "good" },
   ],
   method: [
     { step: "01", title: "Separate", detail: "Score the final answer independently from the learner’s causal explanation." },
     { step: "02", title: "Diagnose", detail: "Map the explanation to a specific misconception, not a generic wrong label." },
     { step: "03", title: "Replay", detail: "Use a different contrastive problem and mark RESOLVED only when both answer and reasoning are correct." },
   ],
-  proof: ["Five distinct problems", "20-case labeled eval", "Verified replay outcome"],
+  proof: ["Exact ground-truth recovery", "Mathematically different replays", "Reasoning-checked outcomes"],
   note: "The learner responses are synthetic. The fixture F1 measures only the included evaluation set.",
 };

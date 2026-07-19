@@ -23,7 +23,9 @@ different replay problem before reporting the misconception as resolved.
 - 20 labeled synthetic cases spanning five distinct fraction problems;
 - misconception-specific counterexamples;
 - deterministic replay answers and reasoning with `RESOLVED`/`UNRESOLVED`;
-- precision, recall, and F1 acceptance evidence.
+- replay problems that must differ mathematically from the original;
+- reasoning checks tied to the replay’s actual fraction transformation;
+- exact ground-truth recovery, precision, recall, and F1 acceptance evidence.
 
 ## Verification
 

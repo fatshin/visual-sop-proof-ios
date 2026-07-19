@@ -53,6 +53,36 @@ class ProductTests(unittest.TestCase):
         self.assertFalse(passed)
         self.assertFalse(checks["five_distinct_problems"])
 
+    def test_same_problem_cannot_resolve_replay(self):
+        cases = json.loads(product.CASE_DATA)
+        cases[0]["replay_problem"] = cases[0]["problem"]
+        cases[0]["replay_answer"] = cases[0]["answer"]
+        cases[0]["replay_reasoning"] = cases[1]["reasoning"]
+        result = product.analyze({"cases": json.dumps(cases)})
+        passed, checks = product.acceptance(result)
+        self.assertFalse(passed)
+        self.assertFalse(checks["replay_resolved"])
+        self.assertFalse(result["items"][0]["replay_is_different"])
+        self.assertEqual(result["items"][0]["replay_status"], "UNRESOLVED")
+
+    def test_generic_correct_keyword_does_not_verify_wrong_reasoning(self):
+        cases = json.loads(product.CASE_DATA)
+        cases[0]["replay_problem"] = "1/2 + 1/3"
+        cases[0]["replay_answer"] = "5/6"
+        cases[0]["replay_reasoning"] = "This makes one whole."
+        result = product.analyze({"cases": json.dumps(cases)})
+        self.assertEqual(result["items"][0]["replay_status"], "UNRESOLVED")
+        self.assertFalse(product.acceptance(result)[0])
+
+    def test_mislabeled_false_positive_cannot_pass_exact_ground_truth(self):
+        cases = json.loads(product.CASE_DATA)
+        cases[0]["label"] = "CORRECT"
+        result = product.analyze({"cases": json.dumps(cases)})
+        passed, checks = product.acceptance(result)
+        self.assertFalse(passed)
+        self.assertFalse(checks["exact_ground_truth"])
+        self.assertEqual(result["status"], "EVAL_FAIL")
+
     def test_counterexample_is_misconception_specific(self):
         inverted = product.counterexample_for("INVERTED_FRACTION", "1/2 + 1/2", "1")
         added = product.counterexample_for("ADD_BOTH_PARTS", "1/2 + 1/2", "1")
