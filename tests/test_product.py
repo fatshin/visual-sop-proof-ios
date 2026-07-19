@@ -111,6 +111,14 @@ class OracleCouncilTests(unittest.TestCase):
             records = product.import_obsidian_vault(vault)
         self.assertEqual(records, [])
 
+    def test_obsidian_skips_broken_symlinks_and_markdown_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            vault = Path(directory)
+            (vault / "broken.md").symlink_to(vault / "missing.md")
+            (vault / "folder.md").mkdir()
+            records = product.import_obsidian_vault(vault)
+        self.assertEqual(records, [])
+
     def test_sensitive_title_and_common_key_shapes_are_rejected(self) -> None:
         self.assertIsNone(product._record("Obsidian", "password list", "十分に長い本文です"))
         self.assertIsNone(

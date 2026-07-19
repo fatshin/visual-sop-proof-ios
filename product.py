@@ -92,20 +92,25 @@ def import_obsidian_vault(root: str | Path) -> list[MemoryRecord]:
     records: list[MemoryRecord] = []
     candidates = sorted(base.rglob("*.md"))
     for path in candidates:
-        relative = path.relative_to(base)
-        if any(part.startswith(".") for part in relative.parts):
-            continue
-        resolved = path.resolve()
-        if not resolved.is_relative_to(base):
-            continue
-        resolved_relative = resolved.relative_to(base)
-        if any(part.startswith(".") for part in resolved_relative.parts):
-            continue
         if len(records) >= MAX_IMPORT_FILES:
             break
-        if resolved.stat().st_size > MAX_FILE_BYTES:
+        try:
+            if path.is_symlink() or not path.is_file():
+                continue
+            relative = path.relative_to(base)
+            if any(part.startswith(".") for part in relative.parts):
+                continue
+            resolved = path.resolve(strict=True)
+            if not resolved.is_relative_to(base):
+                continue
+            resolved_relative = resolved.relative_to(base)
+            if any(part.startswith(".") for part in resolved_relative.parts):
+                continue
+            if resolved.stat().st_size > MAX_FILE_BYTES:
+                continue
+            text = resolved.read_text(encoding="utf-8", errors="replace")
+        except OSError:
             continue
-        text = resolved.read_text(encoding="utf-8", errors="replace")
         title = _markdown_title(text) or path.stem
         item = _record("Obsidian", title, _markdown_body(text), str(relative))
         if item:
