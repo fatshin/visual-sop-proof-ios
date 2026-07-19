@@ -8,8 +8,8 @@
 ## What it does
 
 CostRoute Lab evaluates complete model-routing combinations over a fixed
-twenty-case suite, rejects routes below the quality floor, and explains the
-lowest-cost passing route.
+twenty-case suite, rejects routes below a three-task macro-average quality
+floor, and explains the lowest-cost passing route using normalized bundle units.
 
 ## How it was built
 
@@ -20,8 +20,9 @@ fixed synthetic scores and does not make live model calls.
 
 ## Proof
 
-- 20 cases with a 91-point quality floor
-- selected route scores 92 with complete coverage
+- 20 cases with a 91-point three-task macro-average floor
+- selected route has a 91.5 macro-average with complete task-model coverage
+- selected route costs 3.0 normalized units per three-task bundle
 - 61% fixture cost reduction versus the GPT-5.6-only fixture
 
 ## Links
@@ -33,4 +34,5 @@ fixed synthetic scores and does not make live model calls.
 
 ## Limits
 
-The benchmark is a reproducible fixture, not a universal price claim.
+The benchmark is a reproducible fixture, not a universal price claim. Cost is
+not a total over all 20 cases; it is a normalized three-task bundle value.

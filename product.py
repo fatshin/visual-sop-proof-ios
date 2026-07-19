@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import io
 import itertools
+import math
 from typing import Any
 
 from runtime.contracts import Field, Product
@@ -29,11 +30,62 @@ PRODUCT = Product(
 )
 
 
+class InvalidBenchmarkError(ValueError):
+    pass
+
+
+class NoFeasibleRouteError(ValueError):
+    pass
+
+
 def parse_rows(raw: str) -> list[dict[str, Any]]:
-    return [{**row, "quality": float(row["quality"]), "cost": float(row["cost"])} for row in csv.DictReader(io.StringIO(raw.strip()))]
+    reader = csv.DictReader(io.StringIO(raw.strip()))
+    required_columns = {"case_id", "task", "model", "quality", "cost"}
+    if reader.fieldnames is None or set(reader.fieldnames) != required_columns:
+        raise InvalidBenchmarkError("CSV columns must be case_id, task, model, quality, cost")
+    rows = []
+    for line_number, row in enumerate(reader, start=2):
+        if not all(row.get(column, "").strip() for column in required_columns):
+            raise InvalidBenchmarkError(f"Missing value on CSV line {line_number}")
+        try:
+            quality, cost = float(row["quality"]), float(row["cost"])
+        except ValueError as error:
+            raise InvalidBenchmarkError(f"Non-numeric quality or cost on CSV line {line_number}") from error
+        if not math.isfinite(quality) or not math.isfinite(cost) or cost < 0:
+            raise InvalidBenchmarkError(f"Invalid quality or cost on CSV line {line_number}")
+        rows.append({**row, "quality": quality, "cost": cost})
+    if not rows:
+        raise InvalidBenchmarkError("Benchmark must contain at least one row")
+    return rows
+
+
+def validate_matrix(rows: list[dict[str, Any]]) -> None:
+    expected_tasks = set(next(iter(MODEL_DATA.values())))
+    expected_models = set(MODEL_DATA)
+    observed_tasks = {row["task"] for row in rows}
+    observed_models = {row["model"] for row in rows}
+    if observed_tasks != expected_tasks:
+        raise InvalidBenchmarkError(
+            f"Task set must be {sorted(expected_tasks)}; got {sorted(observed_tasks)}"
+        )
+    if observed_models != expected_models:
+        raise InvalidBenchmarkError(
+            f"Model set must be {sorted(expected_models)}; got {sorted(observed_models)}"
+        )
+    observed_cells = {(row["task"], row["model"]) for row in rows}
+    missing_cells = sorted(
+        (task, model)
+        for task in expected_tasks
+        for model in expected_models
+        if (task, model) not in observed_cells
+    )
+    if missing_cells:
+        formatted = ", ".join(f"{task}/{model}" for task, model in missing_cells)
+        raise InvalidBenchmarkError(f"Incomplete task-model matrix: {formatted}")
 
 
 def optimize(rows: list[dict[str, Any]], floor: float) -> dict[str, Any]:
+    validate_matrix(rows)
     tasks, models = sorted({row["task"] for row in rows}), sorted({row["model"] for row in rows})
     totals: dict[tuple[str, str], list[float]] = {}
     counts: dict[tuple[str, str], int] = {}
@@ -51,7 +103,7 @@ def optimize(rows: list[dict[str, Any]], floor: float) -> dict[str, Any]:
         candidates.append({"route": route, "quality": round(sum(item[0] for item in selected) / len(tasks), 2), "cost": round(sum(item[1] for item in selected), 2)})
     feasible = [item for item in candidates if item["quality"] >= floor]
     if not feasible:
-        raise ValueError("No route meets the quality floor")
+        raise NoFeasibleRouteError("No route meets the quality floor")
     best = min(feasible, key=lambda item: (item["cost"], -item["quality"]))
     baseline_values = [averages[(task, "gpt-5.6")] for task in tasks]
     baseline = {"route": {task: "gpt-5.6" for task in tasks}, "quality": round(sum(item[0] for item in baseline_values) / len(tasks), 2), "cost": round(sum(item[1] for item in baseline_values), 2)}
@@ -59,17 +111,78 @@ def optimize(rows: list[dict[str, Any]], floor: float) -> dict[str, Any]:
 
 
 def analyze(payload: dict[str, str]) -> dict[str, Any]:
-    result = optimize(parse_rows(payload["results"]), float(payload["quality_floor"]))
+    try:
+        rows = parse_rows(payload["results"])
+        floor = float(payload["quality_floor"])
+        if not math.isfinite(floor):
+            raise ValueError("Quality floor must be finite")
+        result = optimize(rows, floor)
+    except InvalidBenchmarkError as error:
+        return {
+            "status": "INVALID_BENCHMARK",
+            "headline": str(error),
+            "metrics": {
+                "macro_average_quality": None,
+                "normalized_three_task_bundle_cost": None,
+                "fixture_cost_reduction": None,
+                "cases": 0,
+            },
+            "items": [],
+            "evidence": [],
+            "artifact": {"error": str(error)},
+        }
+    except ValueError as error:
+        if not isinstance(error, NoFeasibleRouteError):
+            return {
+                "status": "INVALID_BENCHMARK",
+                "headline": f"Invalid quality floor: {payload['quality_floor']}",
+                "metrics": {
+                    "macro_average_quality": None,
+                    "normalized_three_task_bundle_cost": None,
+                    "fixture_cost_reduction": None,
+                    "cases": 0,
+                },
+                "items": [],
+                "evidence": [],
+                "artifact": {"error": str(error)},
+            }
+        return {
+            "status": "NO_FEASIBLE_ROUTE",
+            "headline": str(error),
+            "metrics": {
+                "macro_average_quality": None,
+                "normalized_three_task_bundle_cost": None,
+                "fixture_cost_reduction": None,
+                "cases": len({row["case_id"] for row in rows}),
+            },
+            "items": [],
+            "evidence": [],
+            "artifact": {"error": str(error), "quality_floor": payload["quality_floor"]},
+        }
     saved = round(100 * (1 - result["best"]["cost"] / result["baseline"]["cost"]), 1)
     return {
-        "status": "ROUTE_FOUND", "headline": f"{saved}% estimated cost reduction at the required quality floor",
-        "metrics": {"quality": result["best"]["quality"], "cost": result["best"]["cost"], "cases": result["cases"]},
+        "status": "ROUTE_FOUND",
+        "headline": f"{saved}% fixture cost reduction for a normalized three-task bundle",
+        "metrics": {
+            "macro_average_quality": result["best"]["quality"],
+            "normalized_three_task_bundle_cost": result["best"]["cost"],
+            "fixture_cost_reduction": saved,
+            "cases": result["cases"],
+        },
         "items": result["frontier"], "evidence": [{"label": task, "value": model} for task, model in result["best"]["route"].items()],
         "artifact": result,
     }
 
 
 def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
-    checks = {"twenty_cases": result["metrics"]["cases"] == 20, "quality_floor": result["metrics"]["quality"] >= 91, "cheaper_than_baseline": result["artifact"]["best"]["cost"] < result["artifact"]["baseline"]["cost"]}
+    checks = {
+        "route_found": result["status"] == "ROUTE_FOUND",
+        "twenty_cases": result["metrics"]["cases"] == 20,
+        "quality_floor": result["metrics"]["macro_average_quality"] >= 91,
+        "cheaper_than_baseline": (
+            result["metrics"]["normalized_three_task_bundle_cost"]
+            < result["artifact"]["baseline"]["cost"]
+        ),
+        "fixture_reduction_reported": result["metrics"]["fixture_cost_reduction"] == 61.0,
+    }
     return all(checks.values()), checks
-
