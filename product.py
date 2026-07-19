@@ -40,6 +40,7 @@ def validate_sequence(events: list[dict[str, Any]]) -> None:
 
 def has_valid_approval(event: dict[str, Any]) -> bool:
     approval = event.get("approval")
+    args = event.get("args", {})
     return (
         isinstance(approval, dict)
         and approval.get("present") is True
@@ -47,6 +48,11 @@ def has_valid_approval(event: dict[str, Any]) -> bool:
         and bool(approval["approved_by"].strip())
         and isinstance(approval.get("approval_id"), str)
         and bool(approval["approval_id"].strip())
+        and approval.get("tool") == event.get("name")
+        and approval.get("customer_id") == args.get("customer_id")
+        and approval.get("action") == "APPROVE"
+        and isinstance(approval.get("amount"), (int, float))
+        and float(approval["amount"]) == float(args.get("amount", 0))
     )
 
 
@@ -113,10 +119,18 @@ def diagnose(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
             "patch": "Bind every side-effect target to the verified customer identity.",
         })
 
-    signatures = [
-        (event.get("name"), json.dumps(event.get("args", {}), sort_keys=True))
-        for event in side_effects
-    ]
+    signatures = []
+    for event in side_effects:
+        args = event.get("args", {})
+        if event.get("name") == "issue_refund":
+            signature = (
+                "issue_refund",
+                str(args.get("customer_id", "")),
+                float(args.get("amount", 0)),
+            )
+        else:
+            signature = (event.get("name"), json.dumps(args, sort_keys=True))
+        signatures.append(signature)
     duplicate = next((signature for signature, count in Counter(signatures).items() if count > 1), None)
     if duplicate:
         findings.append({"id": "DUPLICATE_SIDE_EFFECT", "severity": "CRITICAL", "evidence": f"{duplicate[0]} called twice", "test": "assert idempotency_key is unique", "patch": "Derive and persist an idempotency key."})

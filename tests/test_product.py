@@ -70,11 +70,42 @@ class ProductTests(unittest.TestCase):
             "present": True,
             "approved_by": "manager-7",
             "approval_id": "APR-42",
+            "tool": "issue_refund",
+            "customer_id": "CUS-1",
+            "amount": 750,
+            "action": "APPROVE",
         }
         self.assertNotIn(
             "REFUND_LIMIT_BYPASS",
             {item["id"] for item in product.diagnose(base)},
         )
+
+    def test_approval_must_bind_to_refund_semantics(self):
+        event = {
+            "seq": 2,
+            "type": "tool",
+            "name": "issue_refund",
+            "args": {"customer_id": "CUS-1", "amount": 750},
+            "approval": {
+                "present": True,
+                "approved_by": "manager-7",
+                "approval_id": "APR-42",
+                "tool": "issue_refund",
+                "customer_id": "CUS-2",
+                "amount": 750,
+                "action": "APPROVE",
+            },
+        }
+        self.assertFalse(product.has_valid_approval(event))
+
+    def test_irrelevant_note_cannot_hide_duplicate_refund(self):
+        events = [
+            {"seq": 1, "type": "context", "customer_id": "CUS-1", "verified": True},
+            {"seq": 2, "type": "tool", "name": "issue_refund", "args": {"customer_id": "CUS-1", "amount": 100}},
+            {"seq": 3, "type": "tool", "name": "issue_refund", "args": {"customer_id": "CUS-1", "amount": 100, "note": ""}},
+        ]
+        ids = {item["id"] for item in product.diagnose(events)}
+        self.assertIn("DUPLICATE_SIDE_EFFECT", ids)
 
     def test_side_effect_target_must_match_verified_customer(self):
         events = [
