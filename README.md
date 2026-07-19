@@ -21,6 +21,8 @@ Missing facts or provenance never make a decision appear current.
 - small auditable condition DSL;
 - invalidation-before-review precedence;
 - fail-closed handling for missing values, sources, and decision metadata;
+- invalid-input handling for missing or duplicate decision IDs;
+- fail-closed handling for missing condition keys;
 - source-linked status evidence;
 - owner-linked machine-readable status-transition events.
 

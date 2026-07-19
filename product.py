@@ -28,7 +28,9 @@ PRODUCT = Product(
 )
 
 
-def condition_result(condition: str, values: dict[str, Any]) -> tuple[bool | None, str]:
+def condition_result(condition: Any, values: dict[str, Any]) -> tuple[bool | None, str]:
+    if not isinstance(condition, str) or not condition.strip():
+        return None, "Missing or non-text condition"
     match = re.fullmatch(r"\s*([a-z_]+)\s*(<=|>=|==|<|>)\s*([\d.]+)\s*", condition)
     if not match:
         return None, f"Unsupported condition: {condition}"
@@ -42,39 +44,44 @@ def condition_result(condition: str, values: dict[str, Any]) -> tuple[bool | Non
     return OPS[symbol](actual, expected), f"{key}={actual:g} {symbol} {expected:g}"
 
 
-def assess(decision: dict[str, str], evidence: dict[str, Any]) -> dict[str, Any]:
-    invalid, invalid_trace = condition_result(decision["invalidate_when"], evidence)
-    review, review_trace = condition_result(decision["review_when"], evidence)
+def assess(
+    decision: dict[str, Any],
+    evidence: dict[str, Any],
+    *,
+    input_errors: list[str] | None = None,
+    fallback_id: str = "missing",
+) -> dict[str, Any]:
+    invalid, invalid_trace = condition_result(decision.get("invalidate_when"), evidence)
+    review, review_trace = condition_result(decision.get("review_when"), evidence)
     missing_metadata = [
-        key for key in ("owner", "reason", "decided_at")
+        key for key in ("decision", "owner", "reason", "decided_at")
         if not isinstance(decision.get(key), str) or not decision[key].strip()
     ]
     source = evidence.get("source")
     source_missing = not isinstance(source, str) or not source.strip()
-    if source_missing or missing_metadata:
+    evidence_errors = [
+        message
+        for value, message in ((invalid, invalid_trace), (review, review_trace))
+        if value is None
+    ]
+    reasons = list(input_errors or [])
+    if source_missing:
+        reasons.append("Missing evidence source")
+    if missing_metadata:
+        reasons.append(f"Missing decision metadata: {', '.join(missing_metadata)}")
+    reasons.extend(evidence_errors)
+    if reasons:
         status = "NEEDS_EVIDENCE"
-        reasons = []
-        if source_missing:
-            reasons.append("Missing evidence source")
-        if missing_metadata:
-            reasons.append(f"Missing decision metadata: {', '.join(missing_metadata)}")
-        trace = "; ".join(reasons)
+        trace = "; ".join(dict.fromkeys(reasons))
     elif invalid is True:
         status, trace = "INVALIDATED", invalid_trace
-    elif invalid is None or review is None:
-        status = "NEEDS_EVIDENCE"
-        trace = "; ".join(
-            message
-            for value, message in ((invalid, invalid_trace), (review, review_trace))
-            if value is None
-        )
     elif review is True:
         status, trace = "AT_RISK", review_trace
     else:
         status, trace = "VALID", f"{invalid_trace}; {review_trace}"
     return {
-        "id": decision["id"],
-        "decision": decision["decision"],
+        "id": decision.get("id", fallback_id),
+        "decision": decision.get("decision", ""),
         "owner": decision.get("owner", ""),
         "reason": decision.get("reason", ""),
         "decided_at": decision.get("decided_at", ""),
@@ -83,7 +90,7 @@ def assess(decision: dict[str, str], evidence: dict[str, Any]) -> dict[str, Any]
         "source": source if not source_missing else "missing",
         "event": {
             "type": "STATUS_TRANSITION",
-            "decision_id": decision["id"],
+            "decision_id": decision.get("id", fallback_id),
             "from": "UNASSESSED",
             "to": status,
             "owner": decision.get("owner", ""),
@@ -95,11 +102,46 @@ def assess(decision: dict[str, str], evidence: dict[str, Any]) -> dict[str, Any]
 
 def analyze(payload: dict[str, str]) -> dict[str, Any]:
     decisions, evidence = json.loads(payload["decisions"]), json.loads(payload["evidence"])
-    items = [assess(item, evidence.get(item["id"], {})) for item in decisions]
+    decision_ids = [
+        item.get("id")
+        for item in decisions
+        if isinstance(item.get("id"), str) and item["id"].strip()
+    ]
+    duplicate_ids = sorted({
+        decision_id
+        for decision_id in decision_ids
+        if decision_ids.count(decision_id) > 1
+    })
+    input_errors = (
+        [f"Duplicate decision ID: {decision_id}" for decision_id in duplicate_ids]
+    )
+    items = []
+    for index, item in enumerate(decisions, start=1):
+        decision_id = item.get("id")
+        item_errors = []
+        fallback_id = f"MISSING_ID_{index}"
+        if not isinstance(decision_id, str) or not decision_id.strip():
+            item_errors.append("Missing decision ID")
+            input_errors.append(f"Decision {index} is missing an ID")
+            decision_evidence = {}
+        else:
+            if decision_id in duplicate_ids:
+                item_errors.append(f"Duplicate decision ID: {decision_id}")
+            decision_evidence = evidence.get(decision_id, {})
+        items.append(
+            assess(
+                item,
+                decision_evidence,
+                input_errors=item_errors,
+                fallback_id=fallback_id,
+            )
+        )
     invalid = sum(item["status"] == "INVALIDATED" for item in items)
     at_risk = sum(item["status"] == "AT_RISK" for item in items)
     needs_evidence = sum(item["status"] == "NEEDS_EVIDENCE" for item in items)
-    if invalid:
+    if input_errors:
+        overall_status = "INVALID_INPUT"
+    elif invalid:
         overall_status = "ACTION_REQUIRED"
     elif at_risk:
         overall_status = "REVIEW_REQUIRED"
@@ -128,6 +170,7 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
             "ledger_version": "2",
             "assessments": items,
             "events": [item["event"] for item in items],
+            "input_errors": input_errors,
         },
     }
 
@@ -147,5 +190,6 @@ def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
             for item in result["items"]
         ),
         "transition_events": len(result["artifact"]["events"]) == 3,
+        "valid_input": not result["artifact"]["input_errors"],
     }
     return all(checks.values()), checks

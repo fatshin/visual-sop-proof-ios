@@ -37,5 +37,5 @@ Evidence:
     { step: "03", title: "Reopen", detail: "Emit an owner-linked status transition with the exact evidence that crossed the trigger." },
   ],
   proof: ["Explicit assumptions", "Fail-closed evidence state", "Owner-linked status events"],
-  note: "The ledger fixture is synthetic. A missing value, source, owner, reason, or decision date produces NEEDS_EVIDENCE; it never produces VALID.",
+  note: "The ledger fixture is synthetic. A missing value, condition, source, owner, reason, or decision date produces NEEDS_EVIDENCE; missing or duplicate IDs produce INVALID_INPUT.",
 };

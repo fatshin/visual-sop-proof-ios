@@ -32,6 +32,7 @@ class ProductTests(unittest.TestCase):
         self.assertIn(result["status"], site)
         for title in ("D-1 is invalidated", "D-2 remains valid", "D-3 is at risk"):
             self.assertIn(title, site)
+        self.assertIn("duplicate IDs produce INVALID_INPUT", site)
 
     def test_new_evidence_can_restore_current_status(self):
         evidence = json.loads(product.EVIDENCE)
@@ -93,6 +94,42 @@ class ProductTests(unittest.TestCase):
         d2 = next(item for item in result["items"] if item["id"] == "D-2")
         self.assertEqual(d2["status"], "NEEDS_EVIDENCE")
         self.assertIn("Unsupported condition", d2["evidence"])
+
+    def test_missing_condition_keys_fail_closed_without_key_error(self):
+        for condition_key in ("invalidate_when", "review_when"):
+            decisions = json.loads(product.DECISIONS)
+            del decisions[0][condition_key]
+            result = product.analyze(
+                {"decisions": json.dumps(decisions), "evidence": product.EVIDENCE}
+            )
+            d1 = next(item for item in result["items"] if item["id"] == "D-1")
+            self.assertEqual(d1["status"], "NEEDS_EVIDENCE")
+            self.assertIn("Missing or non-text condition", d1["evidence"])
+
+    def test_duplicate_decision_ids_are_invalid_input(self):
+        decisions = json.loads(product.DECISIONS)
+        decisions[1]["id"] = "D-1"
+        result = product.analyze(
+            {"decisions": json.dumps(decisions), "evidence": product.EVIDENCE}
+        )
+        self.assertEqual(result["status"], "INVALID_INPUT")
+        duplicated = [item for item in result["items"] if item["id"] == "D-1"]
+        self.assertEqual(len(duplicated), 2)
+        self.assertTrue(all(item["status"] == "NEEDS_EVIDENCE" for item in duplicated))
+        self.assertEqual(
+            result["artifact"]["input_errors"],
+            ["Duplicate decision ID: D-1"],
+        )
+
+    def test_missing_decision_id_is_invalid_input(self):
+        decisions = json.loads(product.DECISIONS)
+        del decisions[0]["id"]
+        result = product.analyze(
+            {"decisions": json.dumps(decisions), "evidence": product.EVIDENCE}
+        )
+        self.assertEqual(result["status"], "INVALID_INPUT")
+        self.assertEqual(result["items"][0]["id"], "MISSING_ID_1")
+        self.assertEqual(result["items"][0]["status"], "NEEDS_EVIDENCE")
 
 
 if __name__ == "__main__":
