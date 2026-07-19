@@ -22,6 +22,8 @@ class ProductTests(unittest.TestCase):
         for decision in json.loads(product.DECISIONS):
             self.assertIn(f'"id":"{decision["id"]}"', site)
             self.assertIn(f'"decision":"{decision["decision"]}"', site)
+            self.assertIn(f'"owner":"{decision["owner"]}"', site)
+            self.assertIn(f'"decided_at":"{decision["decided_at"]}"', site)
             self.assertIn(decision["invalidate_when"], site)
             self.assertIn(decision["review_when"], site)
         for decision_id, evidence in json.loads(product.EVIDENCE).items():
@@ -37,7 +39,60 @@ class ProductTests(unittest.TestCase):
         evidence["D-3"]["complaints"] = 2
         result = product.analyze({"decisions": product.DECISIONS, "evidence": json.dumps(evidence)})
         self.assertEqual(result["status"], "CURRENT")
-        self.assertEqual(result["metrics"], {"valid": 3, "at_risk": 0, "invalidated": 0})
+        self.assertEqual(result["metrics"], {"valid": 3, "at_risk": 0, "invalidated": 0, "needs_evidence": 0})
+
+    def test_at_risk_without_invalidation_requires_review(self):
+        evidence = json.loads(product.EVIDENCE)
+        evidence["D-1"]["quality"] = 85
+        result = product.analyze({"decisions": product.DECISIONS, "evidence": json.dumps(evidence)})
+        self.assertEqual(result["status"], "REVIEW_REQUIRED")
+
+    def test_missing_decision_evidence_fails_closed(self):
+        evidence = json.loads(product.EVIDENCE)
+        del evidence["D-2"]
+        result = product.analyze({"decisions": product.DECISIONS, "evidence": json.dumps(evidence)})
+        d2 = next(item for item in result["items"] if item["id"] == "D-2")
+        self.assertEqual(d2["status"], "NEEDS_EVIDENCE")
+        self.assertEqual(result["status"], "ACTION_REQUIRED")
+
+        evidence["D-1"]["quality"] = 85
+        evidence["D-3"]["complaints"] = 2
+        result = product.analyze({"decisions": product.DECISIONS, "evidence": json.dumps(evidence)})
+        self.assertEqual(result["status"], "EVIDENCE_REQUIRED")
+
+    def test_missing_condition_value_or_source_fails_closed(self):
+        evidence = json.loads(product.EVIDENCE)
+        del evidence["D-2"]["uptime"]
+        result = product.analyze({"decisions": product.DECISIONS, "evidence": json.dumps(evidence)})
+        d2 = next(item for item in result["items"] if item["id"] == "D-2")
+        self.assertEqual(d2["status"], "NEEDS_EVIDENCE")
+        self.assertIn("Missing evidence for uptime", d2["evidence"])
+
+        evidence = json.loads(product.EVIDENCE)
+        del evidence["D-1"]["source"]
+        result = product.analyze({"decisions": product.DECISIONS, "evidence": json.dumps(evidence)})
+        d1 = next(item for item in result["items"] if item["id"] == "D-1")
+        self.assertEqual(d1["status"], "NEEDS_EVIDENCE")
+        self.assertEqual(d1["source"], "missing")
+
+    def test_missing_decision_metadata_fails_closed_and_events_are_emitted(self):
+        decisions = json.loads(product.DECISIONS)
+        del decisions[1]["owner"]
+        result = product.analyze({"decisions": json.dumps(decisions), "evidence": product.EVIDENCE})
+        d2 = next(item for item in result["items"] if item["id"] == "D-2")
+        self.assertEqual(d2["status"], "NEEDS_EVIDENCE")
+        self.assertEqual(len(result["artifact"]["events"]), 3)
+        self.assertEqual(result["artifact"]["events"][1]["type"], "STATUS_TRANSITION")
+        self.assertEqual(result["artifact"]["events"][1]["from"], "UNASSESSED")
+        self.assertEqual(result["artifact"]["events"][1]["to"], "NEEDS_EVIDENCE")
+
+    def test_unsupported_condition_fails_closed(self):
+        decisions = json.loads(product.DECISIONS)
+        decisions[1]["invalidate_when"] = "uptime approximately 99.5"
+        result = product.analyze({"decisions": json.dumps(decisions), "evidence": product.EVIDENCE})
+        d2 = next(item for item in result["items"] if item["id"] == "D-2")
+        self.assertEqual(d2["status"], "NEEDS_EVIDENCE")
+        self.assertIn("Unsupported condition", d2["evidence"])
 
 
 if __name__ == "__main__":

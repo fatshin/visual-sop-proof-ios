@@ -3,8 +3,9 @@
 [Live demo](https://decision-invalidation-ledger.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/decision-invalidation-ledger)
 
 Decision Invalidation Ledger stores a decision beside the evidence conditions
-that would reopen it. New evidence changes each item to `VALID`, `AT_RISK`, or
-`INVALIDATED` without rewriting the original decision.
+that would reopen it. New evidence changes each item to `VALID`, `AT_RISK`,
+`INVALIDATED`, or `NEEDS_EVIDENCE` without rewriting the original decision.
+Missing facts or provenance never make a decision appear current.
 
 ## Judge path
 
@@ -19,8 +20,9 @@ that would reopen it. New evidence changes each item to `VALID`, `AT_RISK`, or
 - three-decision JSON ledger;
 - small auditable condition DSL;
 - invalidation-before-review precedence;
+- fail-closed handling for missing values, sources, and decision metadata;
 - source-linked status evidence;
-- machine-readable assessment timeline.
+- owner-linked machine-readable status-transition events.
 
 ## Verification
 
@@ -38,8 +40,9 @@ status changes.
 
 ## Limits
 
-The DSL supports numeric comparisons only. The MVP does not fetch external
-evidence or change operational systems when a decision becomes invalid.
+The DSL supports numeric comparisons only. The MVP emits assessment events but
+does not fetch external evidence, send notifications, or change operational
+systems when a decision becomes invalid.
 
 ## License
 
