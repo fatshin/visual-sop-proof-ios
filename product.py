@@ -43,10 +43,23 @@ def compile_policy(policy: str) -> dict[str, Any]:
     if not threshold_match:
         raise ValueError("Ambiguous policy: refund approval threshold is missing.")
     allowlists: dict[str, list[str]] = {}
-    for role, tools in re.findall(r"(?im)^POL-\d+:\s*(Support|Finance)\s+may use\s+(.+?)\.$", policy):
-        allowlists[role.lower()] = [tool.strip() for tool in re.split(r"\s+and\s+|,\s*", tools)]
-    if re.search(r"(?im)^POL-\d+:\s*Admin may use every registered tool\.$", policy):
+    role_rule_ids: dict[str, str] = {}
+    for rule_id, role, tools in re.findall(
+        r"(?im)^(POL-\d+):\s*(Support|Finance)\s+may use\s+(.+?)\.$",
+        policy,
+    ):
+        normalized_role = role.lower()
+        allowlists[normalized_role] = [
+            tool.strip() for tool in re.split(r"\s+and\s+|,\s*", tools)
+        ]
+        role_rule_ids[normalized_role] = rule_id
+    admin_match = re.search(
+        r"(?im)^(POL-\d+):\s*Admin may use every registered tool\.$",
+        policy,
+    )
+    if admin_match:
         allowlists["admin"] = ["*"]
+        role_rule_ids["admin"] = admin_match.group(1)
     if set(allowlists) != {"support", "finance", "admin"}:
         raise ValueError("Ambiguous policy: one or more role tool lists could not be compiled.")
     approval_tools = ["delete_production"] if "production deletion" in policy.lower() else []
@@ -54,6 +67,7 @@ def compile_policy(policy: str) -> dict[str, Any]:
         "version": "policy-ir/v1",
         "refund_approval_above": float(threshold_match.group(1)),
         "role_allowlists": allowlists,
+        "role_rule_ids": role_rule_ids,
         "approval_tools": approval_tools,
         "rules": [
             {"id": "POL-01", "predicate": "external && pii", "effect": "BLOCK"},
@@ -62,7 +76,14 @@ def compile_policy(policy: str) -> dict[str, Any]:
                 "predicate": f"amount > {threshold_match.group(1)} || tool in approval_tools",
                 "effect": "APPROVAL_REQUIRED",
             },
-            {"id": "POL-03-05", "predicate": "tool not in role_allowlist", "effect": "BLOCK"},
+            *[
+                {
+                    "id": role_rule_ids[role],
+                    "predicate": f"role == {role} && tool not in role_allowlist",
+                    "effect": "BLOCK",
+                }
+                for role in ("support", "finance", "admin")
+            ],
         ],
         "citations": citations,
     }
@@ -74,7 +95,14 @@ def evaluate(ir: dict[str, Any], scenario: dict[str, Any]) -> dict[str, str]:
     role, tool = str(scenario.get("role", "")), str(scenario.get("tool", ""))
     allowed = set(ir["role_allowlists"].get(role, []))
     if "*" not in allowed and tool not in allowed:
-        return {"decision": "BLOCK", "rule": "POL-03-05", "reason": f"{role} cannot use {tool}"}
+        rule_id = ir["role_rule_ids"].get(role)
+        if not rule_id:
+            raise ValueError(f"Unknown role: {role or 'MISSING'}")
+        return {
+            "decision": "BLOCK",
+            "rule": rule_id,
+            "reason": ir["citations"][rule_id],
+        }
     if (
         float(scenario.get("amount", 0)) > ir["refund_approval_above"]
         or tool in ir["approval_tools"]
@@ -96,10 +124,15 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
 
 
 def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
+    citations = result["artifact"]["citations"]
+    non_allow = [item for item in result["items"] if item["decision"] != "ALLOW"]
     checks = {
         "seven_scenarios": len(result["items"]) == 7,
         "expected_decisions": result["metrics"] == {"ALLOW": 3, "BLOCK": 2, "APPROVAL_REQUIRED": 2},
-        "source_citations": all(item["reason"] for item in result["items"]),
+        "source_citations": all(
+            item["rule"] in citations and item["reason"] == citations[item["rule"]]
+            for item in non_allow
+        ),
         "compiled_threshold": result["artifact"]["refund_approval_above"] == 500,
         "compiled_allowlists": result["artifact"]["role_allowlists"]["support"] == ["lookup_customer", "draft_reply"],
     }

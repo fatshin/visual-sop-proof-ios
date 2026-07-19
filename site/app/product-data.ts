@@ -33,12 +33,12 @@ Scenarios:
   findings: [
     { title: "PII email blocked", detail: "S2 is blocked by POL-01 because it sends PII externally.", badge: "BLOCK", tone: "bad" },
     { title: "$900 refund requires approval", detail: "S4 crosses the $500 threshold in POL-02.", badge: "APPROVAL", tone: "warn" },
-    { title: "Support refund blocked", detail: "S5 is outside the support role allowlist.", badge: "ROLE GATE", tone: "good" },
+    { title: "Support refund blocked", detail: "S5 cites the exact POL-03 support allowlist sentence; no synthetic rule ID is emitted.", badge: "ROLE GATE", tone: "good" },
   ],
   method: [
     { step: "01", title: "Parse", detail: "Separate permissions, prohibitions, thresholds, and ambiguity clauses." },
     { step: "02", title: "Compile", detail: "Convert every clause into an explicit decision rule with a source citation." },
-    { step: "03", title: "Challenge", detail: "Run boundary and ambiguity cases before an agent may use the policy." },
+    { step: "03", title: "Challenge", detail: "Run $500 and $500.01 boundary cases plus ambiguity checks before an agent may use the policy." },
   ],
   proof: ["7-case evaluation", "Source-linked rules", "Fail-closed ambiguity"],
   note: "The public fixture is synthetic. Production policy ingestion would require owner approval and version control.",

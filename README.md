@@ -24,6 +24,8 @@ fixture as a live model response.
 - policy completeness gate that stops compilation on missing policy domains;
 - a versioned Policy IR with source citations;
 - role-based tool access, PII egress blocking, and high-risk approval;
+- exact source sentences and existing policy IDs on every non-allow decision;
+- explicit `$500` / `$500.01` refund-threshold regression coverage;
 - seven acceptance scenarios and a machine-readable artifact;
 - loopback-only product UI with no third-party runtime dependency.
 
