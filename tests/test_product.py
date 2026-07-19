@@ -40,9 +40,15 @@ class ProductTests(unittest.TestCase):
 
     def test_answer_is_checked_against_each_problem(self):
         cases = json.loads(product.CASE_DATA)
-        cases[4]["answer"] = "5/6"
+        cases[5]["answer"] = "5/6"
         result = product.analyze({"cases": json.dumps(cases)})
-        self.assertFalse(result["items"][4]["final_answer_correct"])
+        self.assertFalse(result["items"][5]["final_answer_correct"])
+        self.assertEqual(result["items"][5]["expected"], "CORRECT")
+        self.assertEqual(result["items"][5]["predicted"], "CORRECT")
+        self.assertEqual(result["status"], "EVAL_FAIL")
+        passed, checks = product.acceptance(result)
+        self.assertFalse(passed)
+        self.assertFalse(checks["all_final_answers_correct"])
 
     def test_repeated_problem_fails_diversity_guard(self):
         cases = json.loads(product.CASE_DATA)

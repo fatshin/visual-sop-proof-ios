@@ -194,6 +194,7 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
                 "recall": 0.0,
                 "f1": 0.0,
                 "exact_classification": False,
+                "all_final_answers_correct": False,
                 "expected_misconceptions": 0,
                 "replay_outcomes": {"resolved": 0, "unresolved": 0},
             },
@@ -234,11 +235,13 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
     flagged = [item for item in items if item["predicted"] not in ("CORRECT", "UNRESOLVED")]
     resolved = sum(item["replay_status"] == "RESOLVED" for item in flagged)
     exact_classification = all(item["predicted"] == item["expected"] for item in items)
+    all_final_answers_correct = all(item["final_answer_correct"] for item in items)
     expected_misconceptions = sum(item["expected"] != "CORRECT" for item in items)
     return {
         "status": (
             "EVAL_PASS"
             if exact_classification
+            and all_final_answers_correct
             and expected_misconceptions == 5
             and len(flagged) == 5
             and resolved == len(flagged)
@@ -254,6 +257,7 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
             "recall": recall,
             "f1": f1,
             "exact_classification": exact_classification,
+            "all_final_answers_correct": all_final_answers_correct,
             "expected_misconceptions": expected_misconceptions,
             "replay_outcomes": {"resolved": resolved, "unresolved": len(flagged) - resolved},
         },
@@ -266,6 +270,10 @@ def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
         "evaluation_valid": result["status"] == "EVAL_PASS" and not result["artifact"]["evaluation_errors"],
         "twenty_cases": result["metrics"]["cases"] == 20,
         "five_distinct_problems": result["metrics"]["unique_problems"] >= 5,
+        "all_final_answers_correct": (
+            result["artifact"]["all_final_answers_correct"]
+            and all(item["final_answer_correct"] for item in result["items"])
+        ),
         "exact_ground_truth": (
             result["artifact"]["exact_classification"]
             and result["artifact"]["precision"] == 1.0
