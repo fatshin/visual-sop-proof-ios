@@ -28,6 +28,7 @@ class ProductTests(unittest.TestCase):
         self.assertIn("95.17", site)
         self.assertIn("7.7", site)
         self.assertNotIn("escalation", site.lower())
+        self.assertIn("Complete per-case model coverage", site)
 
     def test_higher_quality_floor_changes_selected_route(self):
         result = product.analyze({"quality_floor": "93", "results": product.CSV_DATA})
@@ -46,6 +47,27 @@ class ProductTests(unittest.TestCase):
         result = product.analyze({"quality_floor": "91", "results": "\n".join(rows)})
         self.assertEqual(result["status"], "INVALID_BENCHMARK")
         self.assertIn("Incomplete task-model matrix", result["headline"])
+
+    def test_single_missing_case_model_row_is_invalid(self):
+        rows = product.CSV_DATA.splitlines()
+        rows.remove("C01,extract,gpt-5.6,96,2.10")
+        result = product.analyze(
+            {"quality_floor": "91", "results": "\n".join(rows)}
+        )
+        self.assertEqual(result["status"], "INVALID_BENCHMARK")
+        self.assertIn(
+            "Incomplete model coverage per case/task",
+            result["headline"],
+        )
+
+    def test_duplicate_case_task_model_row_is_invalid(self):
+        rows = product.CSV_DATA.splitlines()
+        rows.append("C01,extract,gpt-5.6,96,2.10")
+        result = product.analyze(
+            {"quality_floor": "91", "results": "\n".join(rows)}
+        )
+        self.assertEqual(result["status"], "INVALID_BENCHMARK")
+        self.assertIn("Duplicate case-task-model rows", result["headline"])
 
     def test_unreachable_floor_returns_no_feasible_route(self):
         result = product.analyze({"quality_floor": "101", "results": product.CSV_DATA})

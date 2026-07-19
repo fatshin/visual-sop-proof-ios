@@ -20,7 +20,7 @@ bundle.
 
 - three models across extraction, reasoning, and drafting;
 - 20-case evaluation dataset;
-- complete task-model matrix validation;
+- unique case-task-model rows and complete model coverage for every case/task;
 - exhaustive route search;
 - macro-average quality-floor enforcement;
 - baseline comparison and top feasible frontier.

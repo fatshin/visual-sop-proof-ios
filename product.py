@@ -82,6 +82,32 @@ def validate_matrix(rows: list[dict[str, Any]]) -> None:
     if missing_cells:
         formatted = ", ".join(f"{task}/{model}" for task, model in missing_cells)
         raise InvalidBenchmarkError(f"Incomplete task-model matrix: {formatted}")
+    row_keys = [
+        (row["case_id"], row["task"], row["model"])
+        for row in rows
+    ]
+    duplicate_keys = sorted({
+        key for key in row_keys if row_keys.count(key) > 1
+    })
+    if duplicate_keys:
+        formatted = ", ".join("/".join(key) for key in duplicate_keys)
+        raise InvalidBenchmarkError(f"Duplicate case-task-model rows: {formatted}")
+    groups: dict[tuple[str, str], set[str]] = {}
+    for row in rows:
+        groups.setdefault((row["case_id"], row["task"]), set()).add(row["model"])
+    incomplete_groups = sorted(
+        (case_id, task, sorted(expected_models - models))
+        for (case_id, task), models in groups.items()
+        if models != expected_models
+    )
+    if incomplete_groups:
+        formatted = ", ".join(
+            f"{case_id}/{task} missing {','.join(models)}"
+            for case_id, task, models in incomplete_groups
+        )
+        raise InvalidBenchmarkError(
+            f"Incomplete model coverage per case/task: {formatted}"
+        )
 
 
 def optimize(rows: list[dict[str, Any]], floor: float) -> dict[str, Any]:
