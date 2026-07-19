@@ -210,6 +210,14 @@ enum AnalysisValidator {
                !result.supportingFrameIDs.isEmpty || !result.contradictingFrameIDs.isEmpty {
                 throw ValidationError.incompatibleEvidence(result.stepID)
             }
+            if result.status == .notEvidenced,
+               result.contextFrameIDs.isEmpty
+                || result.observedFacts.isEmpty
+                || result.missingViewCodes.isEmpty
+                || result.reviewReason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || result.confidence == .high {
+                throw ValidationError.incompatibleEvidence(result.stepID)
+            }
             if result.status == .verified, !result.contradictingFrameIDs.isEmpty {
                 throw ValidationError.incompatibleEvidence(result.stepID)
             }

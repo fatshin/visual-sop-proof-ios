@@ -283,6 +283,14 @@ def validate_analysis(
             result.get("supportingFrameIDs") or result.get("contradictingFrameIDs")
         ):
             raise ClientError(502, "Not-evidenced status cannot contain positive or counter-evidence")
+        if result.get("status") == "not_evidenced" and (
+            not result.get("contextFrameIDs")
+            or not result.get("observedFacts")
+            or not result.get("missingViewCodes")
+            or not str(result.get("reviewReason", "")).strip()
+            or result.get("confidence") == "high"
+        ):
+            raise ClientError(502, "Not-evidenced status requires grounded, reviewable uncertainty")
         if result.get("status") == "verified" and result.get("contradictingFrameIDs"):
             raise ClientError(502, "Verified status cannot contain counter-evidence")
     order = {step["id"]: step["order"] for step in sop["steps"]}

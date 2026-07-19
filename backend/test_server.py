@@ -69,6 +69,9 @@ class ValidationTests(unittest.TestCase):
         valid["results"][0]["status"] = "not_evidenced"
         valid["results"][0]["supportingFrameIDs"] = []
         valid["results"][0]["contextFrameIDs"] = ["frame_000"]
+        valid["results"][0]["missingViewCodes"] = ["side_views"]
+        valid["results"][0]["confidence"] = "medium"
+        valid["results"][0]["reviewReason"] = "Side views require human review."
         results = server.validate_analysis(valid, self.sop, {"frame_000"})
         self.assertEqual(results[0]["status"], "not_evidenced")
 
@@ -76,6 +79,20 @@ class ValidationTests(unittest.TestCase):
         invalid = copy.deepcopy(self.analysis)
         invalid["results"][0]["status"] = "not_evidenced"
         with self.assertRaises(server.ClientError):
+            server.validate_analysis(invalid, self.sop, {"frame_000"})
+
+    def test_not_evidenced_rejects_ungrounded_or_high_confidence_result(self):
+        invalid = copy.deepcopy(self.analysis)
+        invalid["results"][0].update({
+            "status": "not_evidenced",
+            "supportingFrameIDs": [],
+            "contextFrameIDs": [],
+            "observedFacts": [],
+            "missingViewCodes": [],
+            "confidence": "high",
+            "reviewReason": "",
+        })
+        with self.assertRaisesRegex(server.ClientError, "grounded"):
             server.validate_analysis(invalid, self.sop, {"frame_000"})
 
     def test_sha256_requires_lowercase_hex(self):

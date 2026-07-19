@@ -96,6 +96,75 @@ final class AnalysisValidatorTests: XCTestCase {
         }
     }
 
+    func testNotEvidencedRequiresGroundedReviewableUncertainty() {
+        let package = makePackage()
+        let invalid = EvidenceStepResult(
+            stepID: "step_1",
+            status: .notEvidenced,
+            supportingFrameIDs: [],
+            contradictingFrameIDs: [],
+            contextFrameIDs: [],
+            observedFacts: [],
+            missingViewCodes: [],
+            coverage: "No grounded coverage.",
+            confidence: .high,
+            reviewReason: ""
+        )
+        let envelope = replacingFirstResult(in: package.envelope, with: invalid)
+        XCTAssertThrowsError(
+            try AnalysisValidator.validate(AnalysisPackage(sop: package.sop, envelope: envelope))
+        ) { error in
+            XCTAssertEqual(error as? ValidationError, .incompatibleEvidence("step_1"))
+        }
+    }
+
+    func testContradictedRequiresCounterEvidence() {
+        let package = makePackage()
+        let invalid = EvidenceStepResult(
+            stepID: "step_1",
+            status: .contradicted,
+            supportingFrameIDs: [],
+            contradictingFrameIDs: [],
+            contextFrameIDs: ["frame_000"],
+            observedFacts: ["The sampled frame conflicts with the expected sequence."],
+            missingViewCodes: [],
+            coverage: "The relevant interval was sampled.",
+            confidence: .high,
+            reviewReason: "A reviewer must inspect the claimed contradiction."
+        )
+        let envelope = replacingFirstResult(in: package.envelope, with: invalid)
+
+        XCTAssertThrowsError(
+            try AnalysisValidator.validate(AnalysisPackage(sop: package.sop, envelope: envelope))
+        ) { error in
+            XCTAssertEqual(error as? ValidationError, .missingContradictingEvidence("step_1"))
+        }
+    }
+
+    func testNeedsReviewRemainsDistinctFromEvidenceVerdicts() throws {
+        let package = makePackage()
+        let needsReview = EvidenceStepResult(
+            stepID: "step_1",
+            status: .needsReview,
+            supportingFrameIDs: [],
+            contradictingFrameIDs: [],
+            contextFrameIDs: ["frame_000"],
+            observedFacts: ["The sampled frame is relevant but not decisive."],
+            missingViewCodes: ["side_views"],
+            coverage: "Only the top view was sampled.",
+            confidence: .low,
+            reviewReason: "A person must inspect the missing side views."
+        )
+        let envelope = replacingFirstResult(in: package.envelope, with: needsReview)
+        let reviewedPackage = AnalysisPackage(sop: package.sop, envelope: envelope)
+
+        try AnalysisValidator.validate(reviewedPackage)
+        XCTAssertEqual(reviewedPackage.envelope.results.first?.status, .needsReview)
+        XCTAssertTrue(reviewedPackage.envelope.results.first?.supportingFrameIDs.isEmpty == true)
+        XCTAssertTrue(reviewedPackage.envelope.results.first?.contradictingFrameIDs.isEmpty == true)
+        XCTAssertEqual(reviewedPackage.envelope.results.first?.contextFrameIDs, ["frame_000"])
+    }
+
     func testDuplicateFrameIDIsRejected() {
         let package = makePackage()
         let envelope = AnalysisEnvelope(
