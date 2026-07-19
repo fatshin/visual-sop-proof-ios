@@ -2,9 +2,10 @@
 
 [Live demo](https://meeting-to-merge.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/meeting-to-merge)
 
-Meeting to Merge carries four cited meeting requirements into failing test
-names and a minimal proposed diff. A human approval boundary remains between
-the proposal and repository mutation.
+Meeting to Merge carries a complete, uniquely identified set of four cited
+meeting requirements into deterministic scenario checks and a minimal proposed
+diff. A human approval boundary remains between the proposal and repository
+mutation.
 
 ## Judge path
 
@@ -19,9 +20,10 @@ the proposal and repository mutation.
 
 - timestamped `REQ-*` extraction;
 - explicit ambiguity gate;
-- one test name per requirement;
+- completeness, unique-ID, supported-wording, and requirement-to-check gates;
+- one deterministic scenario-check name per requirement;
 - a bounded diff for validation, approval, receipt, and idempotency;
-- baseline FAIL and proposed-rerun PASS evidence;
+- baseline FAIL and deterministic post-patch expectation PASS evidence;
 - human apply requirement.
 
 ## Verification
@@ -40,8 +42,9 @@ citations, ambiguity handling, and the human-apply boundary.
 
 ## Limits
 
-The MVP operates on a bounded source snippet. It does not edit a live
-repository, infer unstated product decisions, or claim a simulated rerun is CI.
+The MVP operates on a bounded source snippet. It structurally parses the source
+without executing it, and it does not apply or execute the proposed patch. Its
+scenario checks are deterministic fixture evidence, not a CI rerun.
 
 ## License
 
