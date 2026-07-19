@@ -134,6 +134,11 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
         return invalid_input_result("Decision ledger must be a non-empty JSON array")
     if not isinstance(evidence, dict):
         return invalid_input_result("Evidence must be a JSON object keyed by decision ID")
+    for index, item in enumerate(decisions, start=1):
+        if not isinstance(item, dict):
+            return invalid_input_result(
+                f"Decision {index} must be a JSON object"
+            )
     decision_ids = [
         item.get("id")
         for item in decisions
@@ -160,6 +165,11 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
             if decision_id in duplicate_ids:
                 item_errors.append(f"Duplicate decision ID: {decision_id}")
             decision_evidence = evidence.get(decision_id, {})
+            if not isinstance(decision_evidence, dict):
+                item_errors.append(
+                    f"Evidence for {decision_id} must be a JSON object"
+                )
+                decision_evidence = {}
         items.append(
             assess(
                 item,
@@ -197,7 +207,17 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
             for state in ("VALID", "AT_RISK", "INVALIDATED", "NEEDS_EVIDENCE")
         },
         "items": items,
-        "evidence": [{"label": key, "value": value.get("source", "missing")} for key, value in evidence.items()],
+        "evidence": [
+            {
+                "label": key,
+                "value": (
+                    value.get("source", "missing")
+                    if isinstance(value, dict)
+                    else "invalid"
+                ),
+            }
+            for key, value in evidence.items()
+        ],
         "artifact": {
             "ledger_version": "2",
             "assessments": items,

@@ -140,6 +140,29 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(result["items"], [])
         self.assertIn("non-empty JSON array", result["headline"])
 
+    def test_non_object_decision_is_invalid_input(self):
+        decisions = json.loads(product.DECISIONS)
+        decisions[1] = "not-an-object"
+        result = product.analyze(
+            {"decisions": json.dumps(decisions), "evidence": product.EVIDENCE}
+        )
+        self.assertEqual(result["status"], "INVALID_INPUT")
+        self.assertEqual(result["items"], [])
+        self.assertIn("Decision 2 must be a JSON object", result["headline"])
+
+    def test_non_object_decision_evidence_needs_evidence(self):
+        evidence = json.loads(product.EVIDENCE)
+        evidence["D-1"]["quality"] = 85
+        evidence["D-2"] = "not-an-object"
+        evidence["D-3"]["complaints"] = 2
+        result = product.analyze(
+            {"decisions": product.DECISIONS, "evidence": json.dumps(evidence)}
+        )
+        self.assertEqual(result["status"], "EVIDENCE_REQUIRED")
+        d2 = next(item for item in result["items"] if item["id"] == "D-2")
+        self.assertEqual(d2["status"], "NEEDS_EVIDENCE")
+        self.assertIn("must be a JSON object", d2["evidence"])
+
     def test_non_finite_evidence_never_becomes_valid(self):
         for value in (float("nan"), float("inf"), float("-inf")):
             evidence = json.loads(product.EVIDENCE)
