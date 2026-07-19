@@ -4,8 +4,8 @@
 
 Public Notice Stress Test checks a public notice against authoritative facts
 before publication. It highlights conflicting dates, amounts, eligibility,
-contact details, and unsupported promises, then emits source-linked repair
-instructions for a communications owner.
+contact details, and recognized late-application promise phrases, then emits
+source-linked repair instructions for a communications owner.
 
 ## Judge path
 
@@ -20,7 +20,7 @@ instructions for a communications owner.
 - label-bound claim extraction that ignores unrelated issue dates and press emails;
 - fail-closed `MISSING` and `AMBIGUOUS` results for absent or conflicting labels;
 - exact comparison with a normalized source record;
-- unsupported-exception detection;
+- bounded late-application promise detection for the documented English grammar;
 - release-blocking status and six source-linked repair instructions;
 - editable input for reviewer-created edge cases.
 

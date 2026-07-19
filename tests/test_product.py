@@ -33,7 +33,7 @@ class ProductTests(unittest.TestCase):
         source = json.loads(product.SOURCE)
         corrected = """Emergency Support Benefit
 Apply by 2026-08-31 at 23:59.
-Every resident aged 18 or older receives ¥50,000 automatically.
+Every resident aged 18 or older receives ¥50,000.
 You must have lived in the city by 2026-04-01.
 Questions: benefits@example.go.jp"""
         result = product.analyze({"notice": corrected, "source": json.dumps(source)})
@@ -45,7 +45,7 @@ Questions: benefits@example.go.jp"""
         notice = """Emergency Support Benefit
 Issued on 2026-01-15.
 Apply by 2026-08-31 at 23:59.
-Every resident aged 18 or older receives ¥50,000 automatically.
+Every resident aged 18 or older receives ¥50,000.
 You must have lived in the city by 2026-04-01.
 Press: press@example.go.jp
 Questions: benefits@example.go.jp"""
@@ -56,7 +56,7 @@ Questions: benefits@example.go.jp"""
         notice = """Emergency Support Benefit
 Apply by 2026-08-31 at 23:59.
 Application deadline: 2026-09-30.
-Every resident aged 18 or older receives ¥50,000 automatically.
+Every resident aged 18 or older receives ¥50,000.
 You must have lived in the city by 2026-04-01.
 Questions: benefits@example.go.jp"""
         deadline = next(
@@ -70,7 +70,7 @@ Questions: benefits@example.go.jp"""
         source = json.loads(product.SOURCE)
         notice = """Emergency Support Benefit
 Issued on 2026-08-31.
-Every resident aged 18 or older receives ¥50,000 automatically.
+Every resident aged 18 or older receives ¥50,000.
 You must have lived in the city by 2026-04-01.
 Press: benefits@example.go.jp"""
         findings = {item["id"]: item for item in product.inspect_notice(notice, source)}
@@ -90,13 +90,16 @@ Press: benefits@example.go.jp"""
         source = json.loads(product.SOURCE)
         corrected = """Emergency Support Benefit
 Apply by 2026-08-31 at 23:59.
-Every resident aged 18 or older receives ¥50,000 automatically.
+Every resident aged 18 or older receives ¥50,000.
 You must have lived in the city by 2026-04-01.
 Questions: benefits@example.go.jp"""
         for promise in (
             "Late applications will be accepted.",
             "Applications after the deadline can still be accepted.",
             "Applications submitted after the deadline may still be accepted.",
+            "We may accept applications received after the deadline.",
+            "We may accept applications received after deadline.",
+            "We can still accept applications after the deadline.",
         ):
             findings = product.inspect_notice(f"{corrected}\n{promise}", source)
             self.assertIn("UNSUPPORTED_EXCEPTION", {item["id"] for item in findings})
@@ -105,11 +108,28 @@ Questions: benefits@example.go.jp"""
         source = json.loads(product.SOURCE)
         notice = """Emergency Support Benefit
 Apply by 2026-08-31 at 23:59.
-Every resident aged 18 or older receives ¥50,000 automatically.
+Every resident aged 18 or older receives ¥50,000.
 You must have lived in the city by 2026-04-01.
 Questions: benefits@example.go.jp
 Late applications will not be accepted."""
         self.assertEqual(product.inspect_notice(notice, source), [])
+
+    def test_non_promise_deadline_language_is_not_flagged(self):
+        source = json.loads(product.SOURCE)
+        corrected = """Emergency Support Benefit
+Apply by 2026-08-31 at 23:59.
+Every resident aged 18 or older receives ¥50,000.
+You must have lived in the city by 2026-04-01.
+Questions: benefits@example.go.jp"""
+        for statement in (
+            "We may accept applications before the deadline.",
+            "We may not accept applications after the deadline.",
+            "Contact us after the deadline for questions.",
+        ):
+            self.assertEqual(
+                product.inspect_notice(f"{corrected}\n{statement}", source),
+                [],
+            )
 
 
 if __name__ == "__main__":

@@ -5,14 +5,14 @@ export const product: Product = {
   name: "Public Notice Stress Test",
   eyebrow: "Evidence before publication",
   tagline: "Catch the sentence that should stop a public release.",
-  description: "Compare a draft public notice with its evidence packet, mark direct contradictions and unsupported claims, and propose precise repairs before publication.",
+  description: "Compare a draft public notice with its evidence packet, mark direct contradictions and recognized late-application promises, and propose precise repairs before publication.",
   accent: "#e04431",
   inputLabel: "Draft notice and evidence",
   inputHint: "This exact notice and five-field source record are evaluated by product.py.",
   inputValue: `Draft notice:
 Emergency Support Benefit
 Apply by 2026-09-30 at 23:59.
-Every resident aged 16 or older receives ¥70,000 automatically.
+Every resident aged 16 or older receives ¥70,000.
 You must have lived in the city by 2026-05-01.
 Questions: support@example.go.jp
 Applications submitted after the deadline may still be accepted.

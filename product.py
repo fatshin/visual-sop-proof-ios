@@ -10,14 +10,14 @@ from runtime.contracts import Field, Product
 SOURCE = json.dumps({"deadline": "2026-08-31", "amount_yen": 50000, "minimum_age": 18, "residency_date": "2026-04-01", "faq_contact": "benefits@example.go.jp"}, indent=2)
 NOTICE = """Emergency Support Benefit
 Apply by 2026-09-30 at 23:59.
-Every resident aged 16 or older receives ¥70,000 automatically.
+Every resident aged 16 or older receives ¥70,000.
 You must have lived in the city by 2026-05-01.
 Questions: support@example.go.jp
 Applications submitted after the deadline may still be accepted."""
 
 PRODUCT = Product(
     3, "public-notice-stress-test", "Public Notice Stress Test",
-    "Find factual conflicts and unsupported promises before a public notice ships.",
+    "Find factual conflicts and recognized late-application promises before a public notice ships.",
     "#0ea5e9",
     (Field("notice", "Draft public notice", NOTICE, 10), Field("source", "Authoritative facts (JSON)", SOURCE, 10)),
 )
@@ -30,8 +30,12 @@ CLAIM_PATTERNS = {
     "faq_contact": r"(?im)^\s*(?:questions?|faq contact)\s*:\s*([\w.+-]+@[\w.-]+)\s*$",
 }
 UNSUPPORTED_LATE_APPLICATION = re.compile(
-    r"(?im)^\s*(?:(?:applications?\s+(?:submitted\s+)?)?after\s+the\s+deadline|late\s+applications?)\s+"
-    r"(?:(?:may|will|can)\s+(?:still\s+)?be|are)\s+accepted[.!]?\s*$"
+    r"(?im)^\s*(?:"
+    r"(?:(?:applications?\s+(?:submitted\s+)?)?after\s+(?:the\s+)?deadline|late\s+applications?)\s+"
+    r"(?:(?:may|will|can)\s+(?:still\s+)?be|are)\s+accepted"
+    r"|we\s+(?:may|will|can)\s+(?:still\s+)?accept\s+applications?"
+    r"(?:\s+(?:submitted|received))?\s+after\s+(?:the\s+)?deadline"
+    r")[.!]?\s*$"
 )
 
 
