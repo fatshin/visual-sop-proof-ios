@@ -97,6 +97,7 @@ Questions: benefits@example.go.jp"""
             "Late applications will be accepted.",
             "Applications after the deadline can still be accepted.",
             "Applications submitted after the deadline may still be accepted.",
+            "Applications received after the deadline may be accepted.",
             "We may accept applications received after the deadline.",
             "We may accept applications received after deadline.",
             "We can still accept applications after the deadline.",
