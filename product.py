@@ -98,6 +98,9 @@ def import_obsidian_vault(root: str | Path) -> list[MemoryRecord]:
         resolved = path.resolve()
         if not resolved.is_relative_to(base):
             continue
+        resolved_relative = resolved.relative_to(base)
+        if any(part.startswith(".") for part in resolved_relative.parts):
+            continue
         if len(records) >= MAX_IMPORT_FILES:
             break
         if resolved.stat().st_size > MAX_FILE_BYTES:
