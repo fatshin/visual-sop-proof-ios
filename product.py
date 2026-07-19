@@ -5,7 +5,7 @@ import hashlib
 import json
 import re
 import zipfile
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
@@ -95,11 +95,14 @@ def import_obsidian_vault(root: str | Path) -> list[MemoryRecord]:
         relative = path.relative_to(base)
         if any(part.startswith(".") for part in relative.parts):
             continue
+        resolved = path.resolve()
+        if not resolved.is_relative_to(base):
+            continue
         if len(records) >= MAX_IMPORT_FILES:
             break
-        if path.stat().st_size > MAX_FILE_BYTES:
+        if resolved.stat().st_size > MAX_FILE_BYTES:
             continue
-        text = path.read_text(encoding="utf-8", errors="replace")
+        text = resolved.read_text(encoding="utf-8", errors="replace")
         title = _markdown_title(text) or path.stem
         item = _record("Obsidian", title, _markdown_body(text), str(relative))
         if item:
@@ -319,10 +322,6 @@ def export_obsidian_markdown(reading: dict[str, Any], records: list[MemoryRecord
         ]
     )
     return "\n".join(lines)
-
-
-def public_payload(records: list[MemoryRecord]) -> list[dict[str, str]]:
-    return [asdict(record) for record in records]
 
 
 def sample_records() -> list[MemoryRecord]:

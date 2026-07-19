@@ -87,6 +87,17 @@ class OracleCouncilTests(unittest.TestCase):
         self.assertEqual(records[0].title, "今日の記録")
         self.assertNotIn("今日の記録", records[0].text)
 
+    def test_obsidian_skips_file_symlinks_outside_vault(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            vault = root / "vault"
+            vault.mkdir()
+            outside = root / "outside.md"
+            outside.write_text("# Outside\n読み込んではいけない記録です。", encoding="utf-8")
+            (vault / "linked.md").symlink_to(outside)
+            records = product.import_obsidian_vault(vault)
+        self.assertEqual(records, [])
+
     def test_sensitive_title_and_common_key_shapes_are_rejected(self) -> None:
         self.assertIsNone(product._record("Obsidian", "password list", "十分に長い本文です"))
         self.assertIsNone(

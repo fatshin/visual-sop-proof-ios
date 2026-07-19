@@ -58,6 +58,7 @@ const themeTerms = {
 };
 
 const state = { memories: [], reading: null };
+const MAX_MEMORIES = 500;
 const byId = (id) => document.getElementById(id);
 
 function escapeHtml(value) {
@@ -90,6 +91,7 @@ function addMemories(items) {
   const known = new Set(state.memories.map((item) => item.id));
   let added = 0;
   for (const item of items) {
+    if (state.memories.length >= MAX_MEMORIES) break;
     const screenText = `${item.title}\n${item.path || ""}\n${item.text}`;
     if (!known.has(item.id) && item.text.trim().length >= 8 && !looksSensitive(screenText)) {
       state.memories.push({ ...item, selected: true });
