@@ -137,6 +137,55 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(result["status"], "REVIEW_NEEDED")
         self.assertIn("Workout date/exercise observations must be unique.", result["artifact"]["warnings"])
 
+    def test_invalid_reps_and_weights_fail_closed_before_strength_math(self):
+        cases = {
+            "fractional reps": product.WORKOUTS.replace(
+                "2026-06-20,Squat,100,5",
+                "2026-06-20,Squat,100,5.5",
+            ),
+            "zero reps": product.WORKOUTS.replace(
+                "2026-06-20,Squat,100,5",
+                "2026-06-20,Squat,100,0",
+            ),
+            "zero baseline weight": product.WORKOUTS.replace(
+                "2026-06-20,Squat,100,5",
+                "2026-06-20,Squat,0,5",
+            ),
+            "non-finite weight": product.WORKOUTS.replace(
+                "2026-06-20,Squat,100,5",
+                "2026-06-20,Squat,nan,5",
+            ),
+            "overlong reps": product.WORKOUTS.replace(
+                "2026-06-20,Squat,100,5",
+                f"2026-06-20,Squat,100,{'9' * 5000}",
+            ),
+        }
+        for label, workouts in cases.items():
+            with self.subTest(label=label):
+                result = product.analyze({
+                    "daily": product.DAILY,
+                    "workouts": workouts,
+                    "body": product.BODY,
+                })
+                self.assertEqual(result["status"], "REVIEW_NEEDED")
+                self.assertFalse(result["artifact"]["input_valid"])
+                self.assertFalse(product.acceptance(result)[0])
+
+        daily = product.DAILY.replace(
+            "2026-06-19,82.00",
+            "2026-06-19,0.00",
+        )
+        result = product.analyze({
+            "daily": daily,
+            "workouts": product.WORKOUTS,
+            "body": product.BODY,
+        })
+        self.assertEqual(result["status"], "REVIEW_NEEDED")
+        self.assertIn(
+            "All weight measurements must be greater than zero.",
+            result["artifact"]["warnings"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import math
+import re
 from datetime import date, timedelta
 from statistics import mean
 from typing import Any
@@ -104,6 +105,21 @@ def validate_inputs(
     else:
         if not all(math.isfinite(value) for value in daily_values + workout_values + body_values):
             errors.append("All measurements must be finite.")
+        daily_weights = [float(row["weight_kg"]) for row in daily]
+        workout_weights = [float(row["weight_kg"]) for row in workouts]
+        if not all(weight > 0 for weight in daily_weights + workout_weights):
+            errors.append("All weight measurements must be greater than zero.")
+        invalid_reps = [
+            row.get("reps")
+            for row in workouts
+            if (
+                not isinstance(row.get("reps"), str)
+                or re.fullmatch(r"\+?[0-9]+", row["reps"].strip()) is None
+                or not row["reps"].strip().lstrip("+").strip("0")
+            )
+        ]
+        if invalid_reps:
+            errors.append("Workout reps must be positive integers.")
     workout_keys = [(row.get("date"), row.get("exercise")) for row in workouts]
     if len(set(workout_keys)) != len(workout_keys):
         errors.append("Workout date/exercise observations must be unique.")
