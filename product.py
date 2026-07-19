@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import operator
 import re
 from typing import Any
@@ -19,6 +20,7 @@ EVIDENCE = json.dumps({
     "D-3": {"completion": 93, "complaints": 7, "source": "launch-week.csv"},
 }, indent=2)
 OPS = {"<": operator.lt, ">": operator.gt, "<=": operator.le, ">=": operator.ge, "==": operator.eq}
+INVALID_SOURCE_SENTINELS = {"missing", "unknown", "n/a", "none", "null", "unverified"}
 
 PRODUCT = Product(
     5, "decision-invalidation-ledger", "Decision Invalidation Ledger",
@@ -41,6 +43,8 @@ def condition_result(condition: Any, values: dict[str, Any]) -> tuple[bool | Non
         actual, expected = float(values[key]), float(threshold)
     except (TypeError, ValueError):
         return None, f"Non-numeric evidence for {key}"
+    if not math.isfinite(actual) or not math.isfinite(expected):
+        return None, f"Non-finite evidence for {key}"
     return OPS[symbol](actual, expected), f"{key}={actual:g} {symbol} {expected:g}"
 
 
@@ -58,15 +62,19 @@ def assess(
         if not isinstance(decision.get(key), str) or not decision[key].strip()
     ]
     source = evidence.get("source")
-    source_missing = not isinstance(source, str) or not source.strip()
+    source_valid = (
+        isinstance(source, str)
+        and bool(source.strip())
+        and source.strip().casefold() not in INVALID_SOURCE_SENTINELS
+    )
     evidence_errors = [
         message
         for value, message in ((invalid, invalid_trace), (review, review_trace))
         if value is None
     ]
     reasons = list(input_errors or [])
-    if source_missing:
-        reasons.append("Missing evidence source")
+    if not source_valid:
+        reasons.append("Missing or invalid evidence source")
     if missing_metadata:
         reasons.append(f"Missing decision metadata: {', '.join(missing_metadata)}")
     reasons.extend(evidence_errors)
@@ -87,21 +95,45 @@ def assess(
         "decided_at": decision.get("decided_at", ""),
         "status": status,
         "evidence": trace,
-        "source": source if not source_missing else "missing",
+        "source": source if source_valid else "missing",
         "event": {
-            "type": "STATUS_TRANSITION",
+            "type": "ASSESSMENT_EVENT",
             "decision_id": decision.get("id", fallback_id),
-            "from": "UNASSESSED",
-            "to": status,
+            "status": status,
             "owner": decision.get("owner", ""),
             "decided_at": decision.get("decided_at", ""),
-            "source": source if not source_missing else "missing",
+            "source": source if source_valid else "missing",
+        },
+    }
+
+
+def invalid_input_result(message: str) -> dict[str, Any]:
+    return {
+        "status": "INVALID_INPUT",
+        "headline": message,
+        "metrics": {
+            "valid": 0,
+            "at_risk": 0,
+            "invalidated": 0,
+            "needs_evidence": 0,
+        },
+        "items": [],
+        "evidence": [],
+        "artifact": {
+            "ledger_version": "2",
+            "assessments": [],
+            "events": [],
+            "input_errors": [message],
         },
     }
 
 
 def analyze(payload: dict[str, str]) -> dict[str, Any]:
     decisions, evidence = json.loads(payload["decisions"]), json.loads(payload["evidence"])
+    if not isinstance(decisions, list) or not decisions:
+        return invalid_input_result("Decision ledger must be a non-empty JSON array")
+    if not isinstance(evidence, dict):
+        return invalid_input_result("Evidence must be a JSON object keyed by decision ID")
     decision_ids = [
         item.get("id")
         for item in decisions
@@ -189,7 +221,10 @@ def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
             item["owner"] and item["reason"] and item["decided_at"]
             for item in result["items"]
         ),
-        "transition_events": len(result["artifact"]["events"]) == 3,
+        "assessment_events": (
+            len(result["artifact"]["events"]) == 3
+            and all(event["type"] == "ASSESSMENT_EVENT" for event in result["artifact"]["events"])
+        ),
         "valid_input": not result["artifact"]["input_errors"],
     }
     return all(checks.values()), checks

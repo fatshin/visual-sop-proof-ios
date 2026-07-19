@@ -15,7 +15,7 @@ or decision metadata never produce a valid result.
 ## How it was built
 
 I used Codex with GPT-5.6 to implement the ledger schema, trigger comparison,
-four-state fail-closed evaluation, owner-linked status-transition events,
+four-state fail-closed evaluation, owner-linked assessment events,
 tests, and browser interface. A future live path can use GPT-5.6 to extract
 candidate assumptions; the public demo uses a tested fixture, and owners
 approve the final assumptions and triggers.
@@ -37,4 +37,5 @@ approve the final assumptions and triggers.
 ## Limits
 
 The fixture includes named owners and durable-looking synthetic sources. The
-MVP emits status events but does not notify people or change external systems.
+MVP emits assessment events without persisted history; it does not notify
+people or change external systems.

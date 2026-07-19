@@ -24,7 +24,8 @@ Missing facts or provenance never make a decision appear current.
 - invalid-input handling for missing or duplicate decision IDs;
 - fail-closed handling for missing condition keys;
 - source-linked status evidence;
-- owner-linked machine-readable status-transition events.
+- owner-linked machine-readable assessment events; this MVP does not claim
+  persisted status history.
 
 ## Verification
 

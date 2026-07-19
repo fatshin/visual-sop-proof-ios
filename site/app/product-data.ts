@@ -34,8 +34,8 @@ Evidence:
   method: [
     { step: "01", title: "Register", detail: "Store the decision, owner, reason, decision date, assumptions, evidence, and review trigger." },
     { step: "02", title: "Compare", detail: "Match new facts to the assumptions they can weaken or replace." },
-    { step: "03", title: "Reopen", detail: "Emit an owner-linked status transition with the exact evidence that crossed the trigger." },
+    { step: "03", title: "Reopen", detail: "Emit an owner-linked assessment event with the exact evidence that crossed the trigger." },
   ],
-  proof: ["Explicit assumptions", "Fail-closed evidence state", "Owner-linked status events"],
+  proof: ["Explicit assumptions", "Fail-closed evidence state", "Owner-linked assessment events"],
   note: "The ledger fixture is synthetic. A missing value, condition, source, owner, reason, or decision date produces NEEDS_EVIDENCE; missing or duplicate IDs produce INVALID_INPUT.",
 };

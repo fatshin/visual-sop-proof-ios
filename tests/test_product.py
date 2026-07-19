@@ -76,16 +76,17 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(d1["status"], "NEEDS_EVIDENCE")
         self.assertEqual(d1["source"], "missing")
 
-    def test_missing_decision_metadata_fails_closed_and_events_are_emitted(self):
+    def test_missing_decision_metadata_fails_closed_and_assessments_are_emitted(self):
         decisions = json.loads(product.DECISIONS)
         del decisions[1]["owner"]
         result = product.analyze({"decisions": json.dumps(decisions), "evidence": product.EVIDENCE})
         d2 = next(item for item in result["items"] if item["id"] == "D-2")
         self.assertEqual(d2["status"], "NEEDS_EVIDENCE")
         self.assertEqual(len(result["artifact"]["events"]), 3)
-        self.assertEqual(result["artifact"]["events"][1]["type"], "STATUS_TRANSITION")
-        self.assertEqual(result["artifact"]["events"][1]["from"], "UNASSESSED")
-        self.assertEqual(result["artifact"]["events"][1]["to"], "NEEDS_EVIDENCE")
+        self.assertEqual(result["artifact"]["events"][1]["type"], "ASSESSMENT_EVENT")
+        self.assertEqual(result["artifact"]["events"][1]["status"], "NEEDS_EVIDENCE")
+        self.assertNotIn("from", result["artifact"]["events"][1])
+        self.assertNotIn("to", result["artifact"]["events"][1])
 
     def test_unsupported_condition_fails_closed(self):
         decisions = json.loads(product.DECISIONS)
@@ -130,6 +131,37 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(result["status"], "INVALID_INPUT")
         self.assertEqual(result["items"][0]["id"], "MISSING_ID_1")
         self.assertEqual(result["items"][0]["status"], "NEEDS_EVIDENCE")
+
+    def test_empty_ledger_is_invalid_input(self):
+        result = product.analyze(
+            {"decisions": "[]", "evidence": product.EVIDENCE}
+        )
+        self.assertEqual(result["status"], "INVALID_INPUT")
+        self.assertEqual(result["items"], [])
+        self.assertIn("non-empty JSON array", result["headline"])
+
+    def test_non_finite_evidence_never_becomes_valid(self):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            evidence = json.loads(product.EVIDENCE)
+            evidence["D-2"]["uptime"] = value
+            result = product.analyze(
+                {"decisions": product.DECISIONS, "evidence": json.dumps(evidence)}
+            )
+            d2 = next(item for item in result["items"] if item["id"] == "D-2")
+            self.assertEqual(d2["status"], "NEEDS_EVIDENCE")
+            self.assertIn("Non-finite evidence for uptime", d2["evidence"])
+
+    def test_invalid_source_sentinel_never_becomes_valid(self):
+        for sentinel in ("missing", "UNKNOWN", "n/a", "unverified"):
+            evidence = json.loads(product.EVIDENCE)
+            evidence["D-2"]["source"] = sentinel
+            result = product.analyze(
+                {"decisions": product.DECISIONS, "evidence": json.dumps(evidence)}
+            )
+            d2 = next(item for item in result["items"] if item["id"] == "D-2")
+            self.assertEqual(d2["status"], "NEEDS_EVIDENCE")
+            self.assertEqual(d2["source"], "missing")
+            self.assertIn("invalid evidence source", d2["evidence"])
 
 
 if __name__ == "__main__":
