@@ -28,7 +28,7 @@ export const product: Product = {
   method: [
     { step: "01", title: "Reconstruct", detail: "Order observations, decisions, tool calls, and side effects into one timeline." },
     { step: "02", title: "Localize", detail: "Apply explicit detectors to each supported failure mode." },
-    { step: "03", title: "Prevent", detail: "Propose a minimal patch and an assertion that fails on the original trace; rerun remains NOT_RUN." },
+    { step: "03", title: "Prevent", detail: "Propose a scoped patch suggestion and an assertion that fails on the original trace; rerun remains NOT_RUN." },
   ],
   proof: ["Validated sequence", "One test per failure", "Proposed patch scope"],
   note: "This demo uses a synthetic trace and does not execute refunds or connect to customer systems.",

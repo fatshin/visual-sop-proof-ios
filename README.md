@@ -3,8 +3,8 @@
 [Live demo](https://agent-autopsy.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/agent-autopsy)
 
 Agent Autopsy converts a failed support-agent trace into reproducible failure
-modes, regression-test assertions, and a narrow patch plan. It never applies a
-patch automatically.
+modes, regression-test assertions, and scoped patch suggestions. It never
+applies a patch automatically.
 
 ## Judge path
 
@@ -32,8 +32,8 @@ patch automatically.
 
 ## OpenAI and Codex
 
-I used Codex with GPT-5.6 to implement trace normalization, causal detectors,
-regression tests, the public interface, and adversarial review. A future live
+I used Codex with GPT-5.6 to implement trace normalization, deterministic
+failure-mode detectors, regression tests, the public interface, and adversarial review. A future live
 path can use GPT-5.6 as a hypothesis generator over an unstructured trace, but
 deterministic detectors decide whether the three acceptance failures are
 present. The submitted judge path is intentionally credential-free.
