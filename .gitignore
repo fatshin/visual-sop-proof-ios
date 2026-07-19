@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+artifacts/screenshots/
+artifacts/demo/*.mp4
+site/.DS_Store

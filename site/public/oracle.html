@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ObsidianとChatGPTの記憶を、10の占術で読み直すローカルファーストの内省ツール">
+    <title>Oracle Council — 記憶を読み、次の一歩を選ぶ</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="noise" aria-hidden="true"></div>
+    <header class="nav">
+      <a class="brand" href="#top" aria-label="Oracle Council home">
+        <span class="brand-mark">◌</span>
+        <span>ORACLE COUNCIL</span>
+      </a>
+      <div class="privacy-pill"><span></span> LOCAL ONLY</div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <p class="eyebrow">TEN TRADITIONS. YOUR OWN MEMORY.</p>
+        <h1>未来を占う前に、<br><em>自分の記憶</em>を読む。</h1>
+        <p class="lead">
+          ObsidianのノートとChatGPTの記憶を、易・タロット・占星術など
+          10の象徴体系で読み直します。外部送信はありません。
+        </p>
+        <div class="hero-actions">
+          <button class="primary" id="start-demo">サンプルで始める <span>→</span></button>
+          <a href="#import">自分の記憶を選ぶ</a>
+        </div>
+        <div class="orbit" aria-hidden="true">
+          <div class="orbit-ring ring-one"></div>
+          <div class="orbit-ring ring-two"></div>
+          <div class="moon">☾</div>
+          <span class="star s1">✦</span><span class="star s2">·</span><span class="star s3">✧</span>
+        </div>
+      </section>
+
+      <section class="traditions" aria-label="対応する占術">
+        <div>易経 <span>01</span></div>
+        <div>四柱推命 <span>02</span></div>
+        <div>九星気学 <span>03</span></div>
+        <div>宿曜 <span>04</span></div>
+        <div>西洋占星術 <span>05</span></div>
+        <div>タロット <span>06</span></div>
+        <div>数秘術 <span>07</span></div>
+        <div>ルーン <span>08</span></div>
+        <div>ジオマンシー <span>09</span></div>
+        <div>月相・暦 <span>10</span></div>
+      </section>
+
+      <section class="workspace" id="import">
+        <div class="section-heading">
+          <p class="eyebrow">MEMORY WORKSPACE</p>
+          <h2>占いに使う記憶を、<br>あなたが決める。</h2>
+          <p>読み込んだ内容はブラウザの中だけで処理されます。選択を外した記憶は結果に使用しません。</p>
+        </div>
+
+        <div class="import-grid">
+          <article class="source-card obsidian-card">
+            <div class="source-icon">◇</div>
+            <p class="source-label">OBSIDIAN</p>
+            <h3>Vaultのノート</h3>
+            <p>MarkdownファイルまたはVaultフォルダを選びます。設定フォルダは除外します。</p>
+            <label class="file-button">
+              Markdownを選ぶ
+              <input id="obsidian-files" type="file" accept=".md,text/markdown" multiple>
+            </label>
+            <label class="text-button">
+              Vaultフォルダを選ぶ
+              <input id="obsidian-folder" type="file" accept=".md,text/markdown" webkitdirectory multiple>
+            </label>
+          </article>
+
+          <article class="source-card chatgpt-card">
+            <div class="source-icon">✣</div>
+            <p class="source-label">CHATGPT</p>
+            <h3>会話とMemory summary</h3>
+            <p>展開したconversations.json、または設定画面からコピーしたMemory summaryを使います。</p>
+            <label class="file-button">
+              JSONを選ぶ
+              <input id="chatgpt-file" type="file" accept=".json,application/json">
+            </label>
+            <button class="text-button" id="toggle-memory">Memory summaryを貼る</button>
+          </article>
+        </div>
+
+        <div class="memory-input hidden" id="memory-input">
+          <label for="memory-summary">ChatGPTのMemory summary</label>
+          <textarea id="memory-summary" rows="5" placeholder="・大きな決断では比較表があると安心する&#10;・一週間後に振り返る習慣がある"></textarea>
+          <button id="add-summary">記憶として追加する</button>
+        </div>
+
+        <div class="memory-review" id="memory-review">
+          <div class="review-head">
+            <div>
+              <p class="eyebrow">CONSENT BEFORE INTERPRETATION</p>
+              <h3>取り込んだ記憶</h3>
+            </div>
+            <div class="memory-count"><strong id="selected-count">0</strong><span>selected</span></div>
+          </div>
+          <div id="memory-list" class="memory-list empty-state">
+            <p>まだ記憶は読み込まれていません。</p>
+            <button id="sample-inline">4件のサンプルを読み込む</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="question-section">
+        <div class="question-card">
+          <p class="eyebrow">YOUR QUESTION</p>
+          <label for="question">今、何を読み解きたいですか。</label>
+          <textarea id="question" rows="3">次の仕事へ進むために、今どの準備を始めるべきですか</textarea>
+          <div class="question-footer">
+            <p><span>!</span> 医療・法律・投資・安全の判断には使用できません。</p>
+            <button class="primary" id="create-reading">10の占術で読み解く <span>✦</span></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="result hidden" id="result" aria-live="polite">
+        <div class="result-intro">
+          <p class="eyebrow">THE COUNCIL HAS SPOKEN</p>
+          <h2>記憶と象徴が<br>重なる場所。</h2>
+          <p id="synthesis"></p>
+          <div class="theme-row" id="theme-row"></div>
+        </div>
+        <div class="reading-grid" id="reading-grid"></div>
+        <div class="next-step">
+          <div>
+            <p class="eyebrow">A GROUNDED NEXT STEP</p>
+            <h3>占いを、行動に戻す。</h3>
+            <p>24時間以内に確認できる事実を一つ調べ、7日後にこの読みを振り返ってください。</p>
+          </div>
+          <button id="download-note">Obsidianノートを保存 <span>↓</span></button>
+        </div>
+        <p class="disclaimer">
+          この結果は娯楽と内省のためのものです。未来の事実を予測したり、専門家の判断に代わったりするものではありません。
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <span>ORACLE COUNCIL</span>
+      <p>Your memory stays yours.</p>
+    </footer>
+    <div class="toast" id="toast" role="status"></div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
