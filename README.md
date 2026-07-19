@@ -20,12 +20,13 @@ validated local page reference and states both break and reversal conditions.
 
 - three explicit theses and falsification rules;
 - normalized three-quarter evidence;
-- strict `YYYY-Qn` validation, chronological sorting, and duplicate rejection;
+- strict `YYYY-Qn` validation, chronological sorting, adjacency checks, and duplicate rejection;
 - finite metric validation and an explicit supported-rule parser;
 - minimum three-quarter history for two consecutive quarter-to-quarter declines;
 - consecutive-decline and numeric-floor evaluators;
 - stable disconfirming-evidence-first output;
-- validated source-file/page anchors, reversal conditions, and a
+- source-file/page anchors whose metric values match normalized evidence,
+  stateless reversal conditions, and a
   financial-advice disclaimer.
 
 ## Verification
@@ -46,6 +47,9 @@ synthetic filings and avoids live EDINET dependencies.
 
 This is not financial advice. The MVP accepts normalized JSON and does not
 download filings, parse XBRL, place trades, or estimate expected return.
+The consecutive-decline rule is stateless: it evaluates only the latest
+three-quarter window, so one flat or rising latest comparison makes that window
+intact.
 
 ## License
 

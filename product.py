@@ -31,6 +31,11 @@ PRODUCT = Product(
 QUARTER_PATTERN = re.compile(r"^(\d{4})-Q([1-4])$")
 SOURCE_PATTERN = re.compile(r"^([^#]+)#page-(\d+)$")
 BELOW_RULE_PATTERN = re.compile(r"^below:(-?(?:\d+(?:\.\d*)?|\.\d+))$")
+METRIC_LABELS = {
+    "overseas_ratio": ("Overseas revenue ratio", "%"),
+    "operating_margin": ("Operating margin", "%"),
+    "free_cash_flow": ("Free cash flow", ""),
+}
 
 
 def parse_rule(rule: str) -> tuple[str, float | None]:
@@ -68,8 +73,14 @@ def normalize_quarters(quarters: list[dict[str, Any]], metrics: set[str]) -> lis
                 raise ValueError(f"{row['quarter']} has a non-finite {metric}")
         if not source_reference_valid(str(row.get("source", ""))):
             raise ValueError(f"Invalid source reference for {row['quarter']}: {row.get('source')!r}")
+        if not source_metric_values_valid(row, metrics):
+            raise ValueError(f"Source metric/value mismatch for {row['quarter']}")
         normalized.append((key, row))
-    return [row for _, row in sorted(normalized, key=lambda item: item[0])]
+    normalized = sorted(normalized, key=lambda item: item[0])
+    ordinals = [year * 4 + quarter for (year, quarter), _ in normalized]
+    if any(later - earlier != 1 for earlier, later in zip(ordinals, ordinals[1:], strict=False)):
+        raise ValueError("Quarter evidence must be chronologically adjacent without gaps")
+    return [row for _, row in normalized]
 
 
 def source_reference_valid(reference: str) -> bool:
@@ -81,6 +92,35 @@ def source_reference_valid(reference: str) -> bool:
     if not source.is_relative_to(root) or not source.is_file():
         return False
     return f"## Page {match.group(2)}" in source.read_text()
+
+
+def source_metric_values_valid(row: dict[str, Any], metrics: set[str]) -> bool:
+    reference = str(row.get("source", ""))
+    match = SOURCE_PATTERN.fullmatch(reference)
+    if not match:
+        return False
+    root = Path(__file__).resolve().parent
+    source = (root / match.group(1)).resolve()
+    if not source.is_relative_to(root) or not source.is_file():
+        return False
+    content = source.read_text()
+    anchor = f"## Page {match.group(2)}"
+    if anchor not in content:
+        return False
+    page = content.split(anchor, 1)[1].split("\n## ", 1)[0]
+    for metric in metrics:
+        label_suffix = METRIC_LABELS.get(metric)
+        if label_suffix is None:
+            return False
+        label, suffix = label_suffix
+        expected = f"{float(row[metric]):g}{suffix}"
+        if not re.search(
+            rf"^\|\s*{re.escape(label)}\s*\|\s*{re.escape(expected)}\s*\|$",
+            page,
+            re.MULTILINE,
+        ):
+            return False
+    return True
 
 
 def assess(thesis: dict[str, str], quarters: list[dict[str, Any]]) -> dict[str, Any]:
@@ -96,7 +136,10 @@ def assess(thesis: dict[str, str], quarters: list[dict[str, Any]]) -> dict[str, 
         broken, trace = values[-3] > values[-2] > values[-1], f"{values[-3]:g} → {values[-2]:g} → {values[-1]:g}"
         sources = [row["source"] for row in quarters[-3:]]
         break_condition = f"{thesis['metric']} declines in two consecutive quarter-to-quarter comparisons"
-        reversal_condition = f"{thesis['metric']} must rise in two consecutive quarter-to-quarter comparisons; one rebound is insufficient"
+        reversal_condition = (
+            f"Under this stateless three-quarter rule, the latest two comparisons "
+            f"must no longer both decline; one flat or rising latest comparison is sufficient"
+        )
     else:
         assert threshold is not None
         broken, trace = values[-1] < threshold, f"latest {values[-1]:g}; floor {threshold:g}"

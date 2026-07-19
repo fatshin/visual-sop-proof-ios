@@ -23,7 +23,7 @@ tested filings, and investors verify all source documents.
 
 - three theses evaluated
 - one thesis broken after two consecutive declines
-- every result carries a document-page reference
+- every result carries a document-page reference whose metric value is verified
 
 ## Links
 
@@ -34,4 +34,5 @@ tested filings, and investors verify all source documents.
 
 ## Limits
 
-This synthetic demonstration is not investment advice.
+This synthetic demonstration is not investment advice. The decline rule is
+stateless and evaluates only the latest three-quarter window.

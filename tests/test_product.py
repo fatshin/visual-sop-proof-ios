@@ -30,10 +30,14 @@ class ProductTests(unittest.TestCase):
         self.assertIn("T-1 is broken", site)
 
     def test_rising_overseas_ratio_keeps_all_theses_intact(self):
-        quarters = json.loads(product.QUARTERS)
-        quarters[0]["overseas_ratio"] = 35
-        quarters[1]["overseas_ratio"] = 38
-        quarters[2]["overseas_ratio"] = 42
+        quarters = json.loads(product.QUARTERS)[1:]
+        quarters.append({
+            "quarter": "2026-Q2",
+            "overseas_ratio": 38,
+            "operating_margin": 13.0,
+            "free_cash_flow": 450,
+            "source": "fixtures/FY2026-Q2-results.md#page-10",
+        })
         result = product.analyze({"theses": product.THESES, "quarters": json.dumps(quarters)})
         self.assertEqual(result["status"], "THESES_INTACT")
         self.assertEqual(result["metrics"]["broken"], 0)
@@ -73,6 +77,12 @@ class ProductTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Duplicate quarter"):
             product.analyze({"theses": product.THESES, "quarters": json.dumps(duplicate)})
 
+    def test_quarter_history_must_be_adjacent(self):
+        quarters = json.loads(product.QUARTERS)
+        quarters[1]["quarter"] = "2026-Q2"
+        with self.assertRaisesRegex(ValueError, "chronologically adjacent"):
+            product.analyze({"theses": product.THESES, "quarters": json.dumps(quarters)})
+
     def test_non_finite_metric_is_rejected(self):
         quarters = json.loads(product.QUARTERS)
         quarters[-1]["operating_margin"] = float("nan")
@@ -97,12 +107,33 @@ class ProductTests(unittest.TestCase):
         quarters[0]["source"] = "fixtures/FY2025-Q3-results.md#page-99"
         with self.assertRaisesRegex(ValueError, "Invalid source reference"):
             product.analyze({"theses": product.THESES, "quarters": json.dumps(quarters)})
+        mismatch = json.loads(product.QUARTERS)
+        mismatch[0]["overseas_ratio"] = 99
+        with self.assertRaisesRegex(ValueError, "Source metric/value mismatch"):
+            product.analyze({"theses": product.THESES, "quarters": json.dumps(mismatch)})
 
     def test_each_assessment_explains_break_and_reversal(self):
         result = product.analyze({"theses": product.THESES, "quarters": product.QUARTERS})
         t1 = result["items"][0]
         self.assertIn("two consecutive", t1["break_condition"])
-        self.assertIn("one rebound is insufficient", t1["reversal_condition"])
+        self.assertIn("one flat or rising", t1["reversal_condition"])
+
+    def test_one_rebound_restores_intact_under_stateless_rule(self):
+        quarters = json.loads(product.QUARTERS)
+        quarters.append({
+            "quarter": "2026-Q2",
+            "overseas_ratio": 38,
+            "operating_margin": 13.0,
+            "free_cash_flow": 450,
+            "source": "fixtures/FY2026-Q2-results.md#page-10",
+        })
+        result = product.analyze({
+            "theses": product.THESES,
+            "quarters": json.dumps(quarters),
+        })
+        t1 = next(item for item in result["items"] if item["id"] == "T-1")
+        self.assertEqual(t1["status"], "INTACT")
+        self.assertIn("one flat or rising", t1["reversal_condition"])
 
     def test_supported_rule_parser_is_explicit(self):
         self.assertEqual(product.parse_rule("two_consecutive_declines"), ("two_consecutive_declines", None))
