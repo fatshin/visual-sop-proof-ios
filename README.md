@@ -16,12 +16,13 @@ patch automatically.
 
 ## What is implemented
 
-- trace normalization and event-order evidence;
-- customer-context drift detection;
-- duplicate side-effect detection using canonical tool signatures;
-- refund-limit violation detection;
+- contiguous trace-sequence validation;
+- verified-customer to side-effect target matching;
+- duplicate side-effect detection that excludes registered read-only tools;
+- fail-closed handling for tools without an effect classification;
+- refund-limit validation against a complete approval record;
 - one regression assertion and one limited patch per failure;
-- deterministic rerun artifact.
+- an explicit `NOT_RUN` replay state until a patch is actually executed.
 
 ## Verification
 
