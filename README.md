@@ -4,7 +4,8 @@
 
 Public Notice Stress Test checks a public notice against authoritative facts
 before publication. It highlights conflicting dates, amounts, eligibility,
-contact details, and unsupported promises, then emits source-linked repairs.
+contact details, and unsupported promises, then emits source-linked repair
+instructions for a communications owner.
 
 ## Judge path
 
@@ -16,10 +17,11 @@ contact details, and unsupported promises, then emits source-linked repairs.
 
 ## What is implemented
 
-- fixed claim extraction for dates, currency, age, residency, and email;
+- label-bound claim extraction that ignores unrelated issue dates and press emails;
+- fail-closed `MISSING` and `AMBIGUOUS` results for absent or conflicting labels;
 - exact comparison with a normalized source record;
 - unsupported-exception detection;
-- release-blocking status and six source-linked repairs;
+- release-blocking status and six source-linked repair instructions;
 - editable input for reviewer-created edge cases.
 
 ## Verification
@@ -39,7 +41,8 @@ fixture is the primary submitted evidence.
 ## Limits
 
 The MVP expects normalized authoritative facts. It does not scrape government
-sites, establish legal validity, or publish a corrected notice automatically.
+sites, establish legal validity, draft approved public wording, or publish a
+corrected notice automatically.
 
 ## License
 

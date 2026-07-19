@@ -26,12 +26,12 @@ Authoritative source:
   findings: [
     { title: "Five source values conflict", detail: "Deadline, amount, age, residency date, and contact address disagree with the source.", badge: "5 CONFLICTS", tone: "bad" },
     { title: "Late-application promise is unsupported", detail: "No source field supports the added exception.", badge: "UNSUPPORTED", tone: "warn" },
-    { title: "Six linked repairs prepared", detail: "Each replacement points to the exact source value used.", badge: "REPAIR", tone: "good" },
+    { title: "Six linked repair instructions", detail: "Each instruction names the exact source field; a communications owner still drafts and approves wording.", badge: "REPAIR", tone: "good" },
   ],
   method: [
     { step: "01", title: "Atomize", detail: "Break the notice into individually testable factual claims." },
     { step: "02", title: "Compare", detail: "Link each claim to evidence, a contradiction, or a missing source." },
-    { step: "03", title: "Repair", detail: "Provide publishable wording without erasing uncertainty." },
+    { step: "03", title: "Repair", detail: "Provide source-linked repair instructions without claiming that generated wording is publishable." },
   ],
   proof: ["Claim-level citations", "Release stop gate", "Uncertainty preserved"],
   note: "The incident and notice are synthetic. A communications owner must approve any real public release.",

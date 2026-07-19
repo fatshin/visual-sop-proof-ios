@@ -22,23 +22,64 @@ PRODUCT = Product(
     (Field("notice", "Draft public notice", NOTICE, 10), Field("source", "Authoritative facts (JSON)", SOURCE, 10)),
 )
 
+CLAIM_PATTERNS = {
+    "deadline": r"(?im)^\s*(?:apply|application deadline)\s*(?:by|:)\s*(20\d{2}-\d{2}-\d{2})\b",
+    "amount_yen": r"(?im)^\s*(?:benefit amount\s*:|every resident[^\n]*?\breceives?)\s*¥([\d,]+)",
+    "minimum_age": r"(?im)^\s*every resident\s+aged\s+(\d+)\s+or older\b",
+    "residency_date": r"(?im)^\s*you must have lived in the city by\s+(20\d{2}-\d{2}-\d{2})\b",
+    "faq_contact": r"(?im)^\s*(?:questions?|faq contact)\s*:\s*([\w.+-]+@[\w.-]+)\s*$",
+}
+
+
+def extract_labeled_claim(notice: str, source_key: str) -> str:
+    matches = {
+        value.replace(",", "").strip()
+        for value in re.findall(CLAIM_PATTERNS[source_key], notice)
+    }
+    if not matches:
+        return "MISSING"
+    if len(matches) > 1:
+        return "AMBIGUOUS"
+    return next(iter(matches))
+
 
 def inspect_notice(notice: str, source: dict[str, Any]) -> list[dict[str, str]]:
     checks = [
-        ("DEADLINE", source["deadline"], r"20\d{2}-\d{2}-\d{2}", "deadline date"),
-        ("AMOUNT", str(source["amount_yen"]), r"¥([\d,]+)", "benefit amount"),
-        ("AGE", str(source["minimum_age"]), r"aged\s+(\d+)", "minimum age"),
-        ("RESIDENCY", source["residency_date"], r"lived in the city by\s+(20\d{2}-\d{2}-\d{2})", "residency cutoff"),
-        ("CONTACT", source["faq_contact"], r"[\w.+-]+@[\w.-]+", "contact address"),
+        ("DEADLINE", "deadline", str(source["deadline"]), "deadline date"),
+        ("AMOUNT", "amount_yen", str(source["amount_yen"]), "benefit amount"),
+        ("AGE", "minimum_age", str(source["minimum_age"]), "minimum age"),
+        ("RESIDENCY", "residency_date", str(source["residency_date"]), "residency cutoff"),
+        ("CONTACT", "faq_contact", str(source["faq_contact"]), "contact address"),
     ]
     findings = []
-    for code, expected, pattern, label in checks:
-        match = re.search(pattern, notice, re.IGNORECASE)
-        actual = match.group(1 if match and match.lastindex else 0).replace(",", "") if match else "MISSING"
+    for code, source_key, expected, label in checks:
+        actual = extract_labeled_claim(notice, source_key)
         if actual != expected:
-            findings.append({"id": code, "severity": "HIGH", "claim": label, "actual": actual, "expected": expected, "repair": f"Replace {label} with {expected}."})
+            findings.append({
+                "id": code,
+                "severity": "HIGH",
+                "claim": label,
+                "actual": actual,
+                "expected": expected,
+                "source": source_key,
+                "repair": (
+                    f"Use source.{source_key} ({expected}) when the communications "
+                    f"owner drafts and approves the {label} wording."
+                ),
+            })
     if "after the deadline may still be accepted" in notice.lower():
-        findings.append({"id": "UNSUPPORTED_EXCEPTION", "severity": "MEDIUM", "claim": "late applications accepted", "actual": "present", "expected": "no supporting source", "repair": "Remove the unsupported exception."})
+        findings.append({
+            "id": "UNSUPPORTED_EXCEPTION",
+            "severity": "MEDIUM",
+            "claim": "late applications accepted",
+            "actual": "present",
+            "expected": "no supporting source",
+            "source": "MISSING",
+            "repair": (
+                "Remove this claim, or add an authoritative late-application "
+                "source field before the communications owner drafts wording."
+            ),
+        })
     return findings
 
 
@@ -51,11 +92,10 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
         "metrics": {"risks": len(findings), "source_claims": len(source), "linked_repairs": len(findings)},
         "items": findings,
         "evidence": [{"label": key, "value": str(value)} for key, value in source.items()],
-        "artifact": {"corrected_claims": [item["repair"] for item in findings]},
+        "artifact": {"repair_instructions": [item["repair"] for item in findings]},
     }
 
 
 def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
     checks = {"five_fixed_conflicts": sum(item["id"] != "UNSUPPORTED_EXCEPTION" for item in result["items"]) == 5, "unsupported_claim": any(item["id"] == "UNSUPPORTED_EXCEPTION" for item in result["items"]), "repairs_linked": all(item["repair"] for item in result["items"])}
     return all(checks.values()), checks
-

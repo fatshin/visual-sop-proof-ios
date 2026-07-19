@@ -27,7 +27,7 @@ class ProductTests(unittest.TestCase):
         self.assertIn(result["status"], site)
         self.assertIn('value: "5", label: "direct conflicts"', site)
         self.assertIn('value: "1", label: "unsupported claim"', site)
-        self.assertIn("Six linked repairs prepared", site)
+        self.assertIn("Six linked repair instructions", site)
 
     def test_corrected_notice_clears_the_release_gate(self):
         source = json.loads(product.SOURCE)
@@ -39,6 +39,52 @@ Questions: benefits@example.go.jp"""
         result = product.analyze({"notice": corrected, "source": json.dumps(source)})
         self.assertEqual(result["status"], "READY")
         self.assertEqual(result["items"], [])
+
+    def test_issued_date_and_press_email_are_not_mistaken_for_claims(self):
+        source = json.loads(product.SOURCE)
+        notice = """Emergency Support Benefit
+Issued on 2026-01-15.
+Apply by 2026-08-31 at 23:59.
+Every resident aged 18 or older receives ¥50,000 automatically.
+You must have lived in the city by 2026-04-01.
+Press: press@example.go.jp
+Questions: benefits@example.go.jp"""
+        self.assertEqual(product.inspect_notice(notice, source), [])
+
+    def test_multiple_labeled_deadlines_fail_closed_as_ambiguous(self):
+        source = json.loads(product.SOURCE)
+        notice = """Emergency Support Benefit
+Apply by 2026-08-31 at 23:59.
+Application deadline: 2026-09-30.
+Every resident aged 18 or older receives ¥50,000 automatically.
+You must have lived in the city by 2026-04-01.
+Questions: benefits@example.go.jp"""
+        deadline = next(
+            item
+            for item in product.inspect_notice(notice, source)
+            if item["id"] == "DEADLINE"
+        )
+        self.assertEqual(deadline["actual"], "AMBIGUOUS")
+
+    def test_unlabeled_date_and_email_fail_closed_as_missing(self):
+        source = json.loads(product.SOURCE)
+        notice = """Emergency Support Benefit
+Issued on 2026-08-31.
+Every resident aged 18 or older receives ¥50,000 automatically.
+You must have lived in the city by 2026-04-01.
+Press: benefits@example.go.jp"""
+        findings = {item["id"]: item for item in product.inspect_notice(notice, source)}
+        self.assertEqual(findings["DEADLINE"]["actual"], "MISSING")
+        self.assertEqual(findings["CONTACT"]["actual"], "MISSING")
+
+    def test_repairs_are_source_linked_instructions_not_publishable_copy(self):
+        result = product.analyze(
+            {field.name: field.value for field in product.PRODUCT.fields}
+        )
+        for item in result["items"]:
+            self.assertTrue(item["repair"])
+            if item["id"] != "UNSUPPORTED_EXCEPTION":
+                self.assertIn(f"source.{item['source']}", item["repair"])
 
 
 if __name__ == "__main__":
