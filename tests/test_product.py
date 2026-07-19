@@ -71,6 +71,18 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(result["status"], "INVALID_BENCHMARK")
         self.assertIn("Duplicate case-task-model rows", result["headline"])
 
+    def test_duplicate_csv_header_is_invalid(self):
+        duplicated_header = product.CSV_DATA.replace(
+            "case_id,task,model,quality,cost",
+            "case_id,task,model,quality,cost,cost",
+            1,
+        )
+        result = product.analyze(
+            {"quality_floor": "91", "results": duplicated_header}
+        )
+        self.assertEqual(result["status"], "INVALID_BENCHMARK")
+        self.assertIn("CSV columns must be", result["headline"])
+
     def test_unreachable_floor_returns_no_feasible_route(self):
         result = product.analyze({"quality_floor": "100", "results": product.CSV_DATA})
         self.assertEqual(result["status"], "NO_FEASIBLE_ROUTE")

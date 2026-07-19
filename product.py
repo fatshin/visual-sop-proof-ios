@@ -41,7 +41,11 @@ class NoFeasibleRouteError(ValueError):
 def parse_rows(raw: str) -> list[dict[str, Any]]:
     reader = csv.DictReader(io.StringIO(raw.strip()))
     required_columns = {"case_id", "task", "model", "quality", "cost"}
-    if reader.fieldnames is None or set(reader.fieldnames) != required_columns:
+    if (
+        reader.fieldnames is None
+        or len(reader.fieldnames) != len(required_columns)
+        or set(reader.fieldnames) != required_columns
+    ):
         raise InvalidBenchmarkError("CSV columns must be case_id, task, model, quality, cost")
     rows = []
     for line_number, row in enumerate(reader, start=2):
