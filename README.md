@@ -3,8 +3,8 @@
 [Live demo](https://misconception-replay.fatshin.chatgpt.site) · [Public repository](https://github.com/fatshin/misconception-replay)
 
 Misconception Replay checks the reasoning behind a correct fraction answer. It
-detects a misconception, supplies a counterexample, and reports evaluation
-precision, recall, and F1 over 20 labeled cases.
+detects a misconception, supplies a targeted counterexample, and checks a
+different replay problem before reporting the misconception as resolved.
 
 ## Judge path
 
@@ -13,14 +13,16 @@ precision, recall, and F1 over 20 labeled cases.
 3. Select **Run analysis**.
 4. Confirm 20 cases and F1 at or above 0.80.
 5. Expand a flagged case whose final answer is still correct.
-6. Read the counterexample that exposes the faulty rule.
+6. Read the different replay problem and confirm its answer, reasoning, and
+   `RESOLVED` outcome.
 
 ## What is implemented
 
 - fraction-reasoning taxonomy;
 - correct-answer/wrong-reason separation;
-- 20 labeled synthetic cases;
-- counterexample generation;
+- 20 labeled synthetic cases spanning five distinct fraction problems;
+- misconception-specific counterexamples;
+- deterministic replay answers and reasoning with `RESOLVED`/`UNRESOLVED`;
 - precision, recall, and F1 acceptance evidence.
 
 ## Verification
@@ -39,8 +41,9 @@ gate.
 
 ## Limits
 
-The MVP covers fraction addition and three reasoning states. It is not a
-general student assessment or a substitute for a teacher.
+The MVP covers deterministic fraction addition and three reasoning states.
+Replay success is evidence for this fixed fixture, not proof of durable learning
+or a substitute for a teacher.
 
 ## License
 
