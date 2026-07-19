@@ -27,7 +27,7 @@ def checkout(quantity, total, manager_token="", order_id=""):
   metrics: [{ value: "4", label: "requirements" }, { value: "4", label: "baseline failures" }, { value: "4", label: "scenario passes" }],
   findings: [
     { title: "Four requirements extracted", detail: "REQ-1 through REQ-4 retain their timestamps and speakers.", badge: "TRACEABLE", tone: "good" },
-    { title: "Four deterministic scenario checks mapped", detail: "The fixture maps each unique requirement to a named baseline-fail / post-patch-pass scenario. It does not execute the proposed patch.", badge: "VERIFIED", tone: "warn" },
+    { title: "Four deterministic scenario checks mapped", detail: "The fixture maps each unique requirement to a named baseline-fail / post-patch-pass scenario and separately rejects an empty order ID before charge. It does not execute the proposed patch.", badge: "VERIFIED", tone: "warn" },
     { title: "Human apply gate preserved", detail: "The unified diff is proposed but never applied automatically.", badge: "REVIEW", tone: "good" },
   ],
   method: [
@@ -35,6 +35,6 @@ def checkout(quantity, total, manager_token="", order_id=""):
     { step: "02", title: "Check", detail: "Map each accepted requirement to one deterministic fixture scenario." },
     { step: "03", title: "Diff", detail: "Prepare only the lines needed to satisfy the tests and await review." },
   ],
-  proof: ["Complete unique REQ set", "Structural source validation", "Human-controlled apply"],
+  proof: ["Complete unique REQ set", "Non-empty order ID guard", "Human-controlled apply"],
   note: "The transcript and patch are synthetic. The public demo runs deterministic scenario checks, does not execute the patch, and never writes to a repository.",
 };

@@ -41,6 +41,8 @@ BROKEN_BLOCK = (
 FIXED_BLOCK = (
     '    if quantity < 1:\n'
     '        return {"ok": False, "error": "invalid_quantity"}\n'
+    '    if not order_id:\n'
+    '        return {"ok": False, "error": "missing_order_id"}\n'
     '    if total > 500 and not manager_token:\n'
     '        return {"ok": False, "error": "approval_required"}\n'
     '    charge(idempotency_key=order_id)\n'
@@ -98,6 +100,8 @@ def checkout_fixture(
 ) -> dict[str, Any]:
     if patched and quantity < 1:
         return {"ok": False, "error": "invalid_quantity", "charges": 0}
+    if patched and not order_id:
+        return {"ok": False, "error": "missing_order_id", "charges": 0}
     if patched and total > 500 and not manager_token:
         return {"ok": False, "error": "approval_required", "charges": 0}
     return {
@@ -117,6 +121,14 @@ def run_fixture_checks(*, patched: bool) -> list[bool]:
         approval.get("error") == "approval_required",
         receipt.get("order") == "O-3",
         retry.get("charges") == 1,
+    ]
+
+
+def run_patch_safety_checks(*, patched: bool) -> list[bool]:
+    missing_order_id = checkout_fixture(1, 100, "", "", patched=patched)
+    return [
+        missing_order_id.get("error") == "missing_order_id",
+        missing_order_id.get("charges") == 0,
     ]
 
 
@@ -147,6 +159,9 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
         ambiguities.append("No source-changing patch could be produced.")
     baseline_checks = run_fixture_checks(patched=False)
     patched_checks = run_fixture_checks(patched=True)
+    patch_safety_checks = run_patch_safety_checks(patched=True)
+    if not all(patch_safety_checks):
+        ambiguities.append("The proposed patch does not require a non-empty order ID.")
     items = [
         {
             **req,
@@ -178,6 +193,10 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
             "approval_required": True,
             "verification_kind": "deterministic scenario checks; patch not executed",
             "complete_mapping": complete_mapping,
+            "patch_safety_checks": {
+                "rejects_empty_order_id": patch_safety_checks[0],
+                "empty_order_id_prevents_charge": patch_safety_checks[1],
+            },
         },
     }
 
@@ -188,6 +207,7 @@ def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
         "baseline_reproduced": result["metrics"]["baseline_failures"] == 4,
         "four_tests_pass": result["metrics"]["post_patch_passes"] == 4,
         "idempotency_patch": "idempotency_key" in result["artifact"]["patch"],
+        "non_empty_order_id_guard": all(result["artifact"]["patch_safety_checks"].values()),
         "complete_unique_mapping": result["artifact"]["complete_mapping"],
         "source_changed": bool(result["artifact"]["patch"]),
         "no_ambiguities": not result["artifact"]["ambiguities"],

@@ -23,6 +23,7 @@ mutation.
 - completeness, unique-ID, supported-wording, and requirement-to-check gates;
 - one deterministic scenario-check name per requirement;
 - a bounded diff for validation, approval, receipt, and idempotency;
+- an explicit non-empty order-ID guard before any charge;
 - baseline FAIL and deterministic post-patch expectation PASS evidence;
 - human apply requirement.
 
