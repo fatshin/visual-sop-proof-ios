@@ -68,6 +68,35 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(result["status"], "NEEDS_CLARIFICATION")
         self.assertEqual(result["artifact"]["patch"], "")
 
+    def test_call_before_generated_order_id_guard_cannot_be_ready(self):
+        payload = {field.name: field.value for field in product.PRODUCT.fields}
+        payload["source"] = product.SOURCE.replace(
+            '    approved = total >= 500',
+            '    audit_customer()\n    approved = total >= 500',
+        )
+        result = product.analyze(payload)
+        self.assertEqual(result["status"], "NEEDS_CLARIFICATION")
+        self.assertEqual(result["artifact"]["patch"], "")
+        self.assertFalse(result["artifact"]["generated_source_ast_validated"])
+        self.assertTrue(
+            any(
+                "call before the order-ID guard" in error
+                for error in result["artifact"]["ambiguities"]
+            )
+        )
+
+    def test_generated_source_itself_is_ast_validated(self):
+        result = product.analyze(
+            {field.name: field.value for field in product.PRODUCT.fields}
+        )
+        self.assertTrue(result["artifact"]["generated_source_ast_validated"])
+        self.assertEqual(
+            product.generated_source_errors(result["artifact"]["generated_source"]),
+            [],
+        )
+
+    def test_decoy_function_cannot_satisfy_checkout_shape(self):
+        payload = {field.name: field.value for field in product.PRODUCT.fields}
         payload["source"] = (
             "def checkout(quantity, total, manager_token=\"\", order_id=\"\"):\n"
             "    return {\"ok\": True}\n\n"
@@ -92,7 +121,8 @@ class ProductTests(unittest.TestCase):
         self.assertIn('value: "4", label: "scenario passes"', site)
         self.assertIn("Human apply gate preserved", site)
         self.assertIn("deterministic scenario checks", site)
-        self.assertIn("Non-empty order ID guard", site)
+        self.assertIn("Generated-source AST gate", site)
+        self.assertIn("No call before order-ID guard", site)
 
 
 if __name__ == "__main__":

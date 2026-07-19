@@ -35,6 +35,6 @@ def checkout(quantity, total, manager_token="", order_id=""):
     { step: "02", title: "Check", detail: "Map each accepted requirement to one deterministic fixture scenario." },
     { step: "03", title: "Diff", detail: "Prepare only the lines needed to satisfy the tests and await review." },
   ],
-  proof: ["Complete unique REQ set", "Non-empty order ID guard", "Human-controlled apply"],
+  proof: ["Generated-source AST gate", "No call before order-ID guard", "Human-controlled apply"],
   note: "The transcript and patch are synthetic. The public demo runs deterministic scenario checks, does not execute the patch, and never writes to a repository.",
 };

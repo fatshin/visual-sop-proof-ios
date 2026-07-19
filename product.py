@@ -80,13 +80,79 @@ def source_shape_errors(source: str) -> list[str]:
     return []
 
 
-def build_patch(source: str) -> tuple[str, dict[str, str]]:
+def generated_source_errors(source: str) -> list[str]:
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return ["Generated source is not valid Python syntax."]
+    checkouts = [
+        node for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "checkout"
+    ]
+    if len(checkouts) != 1:
+        return ["Generated source must define exactly one checkout function."]
+    checkout = checkouts[0]
+    guard_indexes = [
+        index
+        for index, statement in enumerate(checkout.body)
+        if (
+            isinstance(statement, ast.If)
+            and isinstance(statement.test, ast.UnaryOp)
+            and isinstance(statement.test.op, ast.Not)
+            and isinstance(statement.test.operand, ast.Name)
+            and statement.test.operand.id == "order_id"
+        )
+    ]
+    if len(guard_indexes) != 1:
+        return ["Generated checkout must contain exactly one non-empty order-ID guard."]
+    guard_index = guard_indexes[0]
+    calls_before_guard = [
+        node
+        for statement in checkout.body[:guard_index]
+        for node in ast.walk(statement)
+        if isinstance(node, ast.Call)
+    ]
+    if calls_before_guard:
+        return ["Generated checkout contains a call before the order-ID guard."]
+    charge_calls = [
+        node
+        for statement in checkout.body[guard_index + 1:]
+        for node in ast.walk(statement)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "charge"
+    ]
+    if len(charge_calls) != 1:
+        return ["Generated checkout must contain exactly one charge call after the order-ID guard."]
+    idempotency_keywords = [
+        keyword
+        for keyword in charge_calls[0].keywords
+        if keyword.arg == "idempotency_key"
+    ]
+    if (
+        len(idempotency_keywords) != 1
+        or not isinstance(idempotency_keywords[0].value, ast.Name)
+        or idempotency_keywords[0].value.id != "order_id"
+    ):
+        return ["Generated charge must use order_id as its idempotency key."]
+    return []
+
+
+def build_patch(source: str) -> tuple[str, dict[str, str], str, list[str]]:
     source = source.replace("\r\n", "\n").replace("\r", "\n")
-    if source_shape_errors(source):
-        return "", {requirement_id: value[0] for requirement_id, value in REQUIREMENT_TESTS.items()}
+    tests = {
+        requirement_id: value[0]
+        for requirement_id, value in REQUIREMENT_TESTS.items()
+    }
+    source_errors = source_shape_errors(source)
+    if source_errors:
+        return "", tests, "", source_errors
     fixed = source.replace(BROKEN_BLOCK, FIXED_BLOCK, 1)
+    validation_errors = generated_source_errors(fixed)
+    if validation_errors:
+        return "", tests, fixed, validation_errors
     patch = "\n".join(difflib.unified_diff(source.splitlines(), fixed.splitlines(), "before.py", "after.py", lineterm=""))
-    return patch, {requirement_id: value[0] for requirement_id, value in REQUIREMENT_TESTS.items()}
+    return patch, tests, fixed, []
 
 
 def checkout_fixture(
@@ -134,7 +200,7 @@ def run_patch_safety_checks(*, patched: bool) -> list[bool]:
 
 def analyze(payload: dict[str, str]) -> dict[str, Any]:
     reqs = requirements(payload["transcript"])
-    patch, tests = build_patch(payload["source"])
+    patch, tests, generated_source, generated_validation_errors = build_patch(payload["source"])
     ids = [req["id"] for req in reqs]
     duplicate_ids = sorted({requirement_id for requirement_id in ids if ids.count(requirement_id) > 1})
     missing_ids = sorted(EXPECTED_REQUIREMENT_IDS - set(ids))
@@ -155,6 +221,7 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
     if invalid_text:
         ambiguities.append(f"Unsupported requirement wording: {', '.join(invalid_text)}.")
     ambiguities.extend(source_shape_errors(payload["source"].replace("\r\n", "\n").replace("\r", "\n")))
+    ambiguities.extend(generated_validation_errors)
     if not patch:
         ambiguities.append("No source-changing patch could be produced.")
     baseline_checks = run_fixture_checks(patched=False)
@@ -190,6 +257,8 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
         "artifact": {
             "ambiguities": list(dict.fromkeys(ambiguities)),
             "patch": patch,
+            "generated_source": generated_source,
+            "generated_source_ast_validated": bool(generated_source) and not generated_validation_errors,
             "approval_required": True,
             "verification_kind": "deterministic scenario checks; patch not executed",
             "complete_mapping": complete_mapping,
@@ -208,6 +277,7 @@ def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
         "four_tests_pass": result["metrics"]["post_patch_passes"] == 4,
         "idempotency_patch": "idempotency_key" in result["artifact"]["patch"],
         "non_empty_order_id_guard": all(result["artifact"]["patch_safety_checks"].values()),
+        "generated_source_ast_validated": result["artifact"]["generated_source_ast_validated"],
         "complete_unique_mapping": result["artifact"]["complete_mapping"],
         "source_changed": bool(result["artifact"]["patch"]),
         "no_ambiguities": not result["artifact"]["ambiguities"],
