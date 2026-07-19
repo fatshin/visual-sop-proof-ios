@@ -31,7 +31,7 @@ CLAIM_PATTERNS = {
 }
 UNSUPPORTED_LATE_APPLICATION = re.compile(
     r"(?im)^\s*(?:"
-    r"(?:(?:applications?\s+(?:(?:submitted|received)\s+)?)?after\s+(?:the\s+)?deadline|late\s+applications?)\s+"
+    r"(?:(?:applications?\s+(?:(?:submitted|received|filed)\s+)?)?after\s+(?:the\s+)?deadline|late\s+applications?)\s+"
     r"(?:(?:may|will|can)\s+(?:still\s+)?be|are)\s+accepted"
     r"|we\s+(?:may|will|can)\s+(?:still\s+)?accept\s+applications?"
     r"(?:\s+(?:submitted|received))?\s+after\s+(?:the\s+)?deadline"
