@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -29,6 +30,19 @@ PRODUCT = Product(
 
 QUARTER_PATTERN = re.compile(r"^(\d{4})-Q([1-4])$")
 SOURCE_PATTERN = re.compile(r"^([^#]+)#page-(\d+)$")
+BELOW_RULE_PATTERN = re.compile(r"^below:(-?(?:\d+(?:\.\d*)?|\.\d+))$")
+
+
+def parse_rule(rule: str) -> tuple[str, float | None]:
+    if rule == "two_consecutive_declines":
+        return rule, None
+    match = BELOW_RULE_PATTERN.fullmatch(rule)
+    if not match:
+        raise ValueError(f"Unsupported rule: {rule!r}")
+    threshold = float(match.group(1))
+    if not math.isfinite(threshold):
+        raise ValueError(f"Rule threshold must be finite: {rule!r}")
+    return "below", threshold
 
 
 def normalize_quarters(quarters: list[dict[str, Any]], metrics: set[str]) -> list[dict[str, Any]]:
@@ -45,6 +59,13 @@ def normalize_quarters(quarters: list[dict[str, Any]], metrics: set[str]) -> lis
         missing = metrics.difference(row)
         if missing:
             raise ValueError(f"{row['quarter']} is missing metrics: {', '.join(sorted(missing))}")
+        for metric in metrics:
+            try:
+                value = float(row[metric])
+            except (TypeError, ValueError) as error:
+                raise ValueError(f"{row['quarter']} has a non-numeric {metric}") from error
+            if not math.isfinite(value):
+                raise ValueError(f"{row['quarter']} has a non-finite {metric}")
         if not source_reference_valid(str(row.get("source", ""))):
             raise ValueError(f"Invalid source reference for {row['quarter']}: {row.get('source')!r}")
         normalized.append((key, row))
@@ -63,14 +84,21 @@ def source_reference_valid(reference: str) -> bool:
 
 
 def assess(thesis: dict[str, str], quarters: list[dict[str, Any]]) -> dict[str, Any]:
+    rule_kind, threshold = parse_rule(thesis["rule"])
+    minimum_history = 3 if rule_kind == "two_consecutive_declines" else 1
+    if len(quarters) < minimum_history:
+        raise ValueError(
+            f"{thesis['id']} rule {thesis['rule']!r} requires at least "
+            f"{minimum_history} quarter{'s' if minimum_history != 1 else ''}"
+        )
     values = [float(row[thesis["metric"]]) for row in quarters]
-    if thesis["rule"] == "two_consecutive_declines":
-        broken, trace = len(values) >= 3 and values[-3] > values[-2] > values[-1], f"{values[-3]:g} → {values[-2]:g} → {values[-1]:g}"
+    if rule_kind == "two_consecutive_declines":
+        broken, trace = values[-3] > values[-2] > values[-1], f"{values[-3]:g} → {values[-2]:g} → {values[-1]:g}"
         sources = [row["source"] for row in quarters[-3:]]
         break_condition = f"{thesis['metric']} declines in two consecutive quarter-to-quarter comparisons"
         reversal_condition = f"{thesis['metric']} must rise in two consecutive quarter-to-quarter comparisons; one rebound is insufficient"
     else:
-        threshold = float(thesis["rule"].split(":", 1)[1])
+        assert threshold is not None
         broken, trace = values[-1] < threshold, f"latest {values[-1]:g}; floor {threshold:g}"
         sources = [quarters[-1]["source"]]
         break_condition = f"latest {thesis['metric']} falls below {threshold:g}"

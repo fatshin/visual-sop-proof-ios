@@ -73,6 +73,23 @@ class ProductTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Duplicate quarter"):
             product.analyze({"theses": product.THESES, "quarters": json.dumps(duplicate)})
 
+    def test_non_finite_metric_is_rejected(self):
+        quarters = json.loads(product.QUARTERS)
+        quarters[-1]["operating_margin"] = float("nan")
+        with self.assertRaisesRegex(ValueError, "non-finite operating_margin"):
+            product.analyze({"theses": product.THESES, "quarters": json.dumps(quarters)})
+
+    def test_unknown_rule_is_rejected(self):
+        theses = json.loads(product.THESES)
+        theses[1]["rule"] = "above:12"
+        with self.assertRaisesRegex(ValueError, "Unsupported rule"):
+            product.analyze({"theses": json.dumps(theses), "quarters": product.QUARTERS})
+
+    def test_insufficient_history_is_rejected_deliberately(self):
+        quarters = json.loads(product.QUARTERS)[:2]
+        with self.assertRaisesRegex(ValueError, "requires at least 3 quarters"):
+            product.analyze({"theses": product.THESES, "quarters": json.dumps(quarters)})
+
     def test_source_file_and_anchor_are_validated(self):
         for quarter in json.loads(product.QUARTERS):
             self.assertTrue(product.source_reference_valid(quarter["source"]))
@@ -86,6 +103,12 @@ class ProductTests(unittest.TestCase):
         t1 = result["items"][0]
         self.assertIn("two consecutive", t1["break_condition"])
         self.assertIn("one rebound is insufficient", t1["reversal_condition"])
+
+    def test_supported_rule_parser_is_explicit(self):
+        self.assertEqual(product.parse_rule("two_consecutive_declines"), ("two_consecutive_declines", None))
+        self.assertEqual(product.parse_rule("below:-2.5"), ("below", -2.5))
+        with self.assertRaisesRegex(ValueError, "Unsupported rule"):
+            product.parse_rule("approximately:12")
 
 
 if __name__ == "__main__":

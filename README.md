@@ -21,6 +21,8 @@ validated local page reference and states both break and reversal conditions.
 - three explicit theses and falsification rules;
 - normalized three-quarter evidence;
 - strict `YYYY-Qn` validation, chronological sorting, and duplicate rejection;
+- finite metric validation and an explicit supported-rule parser;
+- minimum three-quarter history for two consecutive quarter-to-quarter declines;
 - consecutive-decline and numeric-floor evaluators;
 - stable disconfirming-evidence-first output;
 - validated source-file/page anchors, reversal conditions, and a

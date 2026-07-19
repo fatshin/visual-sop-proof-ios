@@ -13,10 +13,11 @@ flags the thesis that must be reviewed.
 
 ## How it was built
 
-I used Codex with GPT-5.6 to implement thesis structures, two-period
-invalidation logic, page citations, tests, and the browser interface. A future
-live path can use GPT-5.6 to propose structured claims from filings; the public
-demo uses synthetic tested filings, and investors verify all source documents.
+I used Codex with GPT-5.6 to implement thesis structures, two consecutive
+quarter-to-quarter transition checks over three quarterly observations, page
+citations, tests, and the browser interface. A future live path can use GPT-5.6
+to propose structured claims from filings; the public demo uses synthetic
+tested filings, and investors verify all source documents.
 
 ## Proof
 
