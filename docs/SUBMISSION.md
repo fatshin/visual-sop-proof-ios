@@ -7,9 +7,9 @@
 
 ## What it does
 
-The engine combines normalized HealthKit-style activity, three strength
-markers, and two body scans to explain whether a thirty-day change is consistent
-with fat loss while performance is preserved.
+The engine combines normalized HealthKit-style weight, nutrition observations,
+three strength markers, and two body scans to explain whether a thirty-day
+change is consistent with fat loss while performance is preserved.
 
 ## How it was built
 
@@ -22,7 +22,7 @@ public demo uses synthetic tested data, and raw health data remains local.
 
 - 30-day synthetic normalized export
 - all 3 strength markers preserved or improved
-- two scans support estimated fat-mass reduction
+- two scans show a body-fat percentage decline with lean mass preserved
 - no raw health data is transmitted
 
 ## Links

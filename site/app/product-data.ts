@@ -50,7 +50,7 @@ ${bodyFixture}`,
     { title: "Raw observations remain local", detail: "The artifact records raw_health_data_sent_to_openai=false.", badge: "PRIVACY", tone: "warn" },
   ],
   method: [
-    { step: "01", title: "Normalize", detail: "Align activity, workout, strength, and scan observations to one period." },
+    { step: "01", title: "Normalize", detail: "Align weight, nutrition, workout, strength, and scan observations to one period." },
     { step: "02", title: "Triangulate", detail: "Require body change plus non-declining results for all three named lifts." },
     { step: "03", title: "Explain", detail: "Report the conclusion with uncertainty and the evidence that supports it." },
   ],
