@@ -21,6 +21,8 @@ only when all three required lifts have enough observations and do not decline.
 - 30-day weight EWMA;
 - estimated 1RM for squat, bench press, and deadlift;
 - chronological sorting before trend and lift comparisons;
+- exactly 30 distinct consecutive daily dates;
+- distinct body-scan and workout observation dates with minimum cardinality;
 - fail-closed review when a required lift is missing or declining;
 - two-point body-fat and lean-mass comparison;
 - local classification and source counts;

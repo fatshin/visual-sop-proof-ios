@@ -55,5 +55,5 @@ ${bodyFixture}`,
     { step: "03", title: "Explain", detail: "Report the conclusion with uncertainty and the evidence that supports it." },
   ],
   proof: ["30-day synthetic data", "Three strength markers", "No raw health upload"],
-  note: "This is not medical advice. Daily scale values fluctuate and plateau in the synthetic fixture; the conclusion also requires body-scan and strength evidence.",
+  note: "This is not medical advice. The conclusion requires 30 distinct consecutive daily dates, at least two distinct body scans, and two distinct observations for every required lift.",
 };

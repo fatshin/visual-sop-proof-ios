@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import math
 from datetime import date, timedelta
 from statistics import mean
 from typing import Any
@@ -55,14 +56,129 @@ def by_date(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(rows, key=lambda row: date.fromisoformat(str(row["date"])))
 
 
+REQUIRED_EXERCISES = ("Bench Press", "Deadlift", "Squat")
+
+
+def validate_inputs(
+    daily: list[dict[str, Any]],
+    workouts: list[dict[str, Any]],
+    body: Any,
+) -> list[str]:
+    errors = []
+    if not isinstance(body, list):
+        return ["Body scans must be a JSON array."]
+    try:
+        daily_dates = [date.fromisoformat(str(row["date"])) for row in daily]
+        workout_dates = [date.fromisoformat(str(row["date"])) for row in workouts]
+        body_dates = [date.fromisoformat(str(row["date"])) for row in body]
+    except (KeyError, TypeError, ValueError) as error:
+        return [f"Invalid or missing date: {error}"]
+    if len(daily) != 30:
+        errors.append(f"Exactly 30 daily observations are required; got {len(daily)}.")
+    if len(set(daily_dates)) != len(daily_dates):
+        errors.append("Daily observation dates must be distinct.")
+    ordered_daily_dates = sorted(set(daily_dates))
+    if len(ordered_daily_dates) >= 2 and any(
+        later - earlier != timedelta(days=1)
+        for earlier, later in zip(ordered_daily_dates, ordered_daily_dates[1:], strict=False)
+    ):
+        errors.append("Daily observations must cover consecutive calendar dates.")
+    try:
+        daily_values = [
+            float(row[key])
+            for row in daily
+            for key in ("weight_kg", "calories", "protein_g")
+        ]
+        workout_values = [
+            float(row[key])
+            for row in workouts
+            for key in ("weight_kg", "reps")
+        ]
+        body_values = [
+            float(row[key])
+            for row in body
+            for key in ("body_fat_pct", "lean_mass_kg")
+        ]
+    except (KeyError, TypeError, ValueError) as error:
+        errors.append(f"Missing or non-numeric measurement: {error}")
+    else:
+        if not all(math.isfinite(value) for value in daily_values + workout_values + body_values):
+            errors.append("All measurements must be finite.")
+    workout_keys = [(row.get("date"), row.get("exercise")) for row in workouts]
+    if len(set(workout_keys)) != len(workout_keys):
+        errors.append("Workout date/exercise observations must be unique.")
+    for exercise in REQUIRED_EXERCISES:
+        rows = [row for row in workouts if row.get("exercise") == exercise]
+        if len(rows) < 2 or len({row.get("date") for row in rows}) < 2:
+            errors.append(f"{exercise}: at least two distinct dated observations are required.")
+    if len(body) < 2:
+        errors.append(f"At least two body scans are required; got {len(body)}.")
+    if len(set(body_dates)) != len(body_dates):
+        errors.append("Body scan dates must be distinct.")
+    return list(dict.fromkeys(errors))
+
+
+def invalid_evidence_result(
+    errors: list[str],
+    daily: list[dict[str, Any]],
+    workouts: list[dict[str, Any]],
+    body: list[dict[str, Any]],
+) -> dict[str, Any]:
+    lifts = []
+    for exercise in REQUIRED_EXERCISES:
+        rows = [row for row in workouts if row.get("exercise") == exercise]
+        lifts.append({
+            "exercise": exercise,
+            "first_1rm": None,
+            "latest_1rm": None,
+            "change_pct": None,
+            "state": "INSUFFICIENT" if len(rows) < 2 else "UNVERIFIED",
+        })
+    return {
+        "status": "REVIEW_NEEDED",
+        "headline": f"Review needed: {errors[0]}",
+        "metrics": {
+            "weight_change_kg": None,
+            "body_fat_change_pp": None,
+            "lean_mass_change_kg": None,
+        },
+        "items": lifts,
+        "evidence": [
+            {"label": "daily observations", "value": str(len(daily))},
+            {"label": "body scans", "value": str(len(body))},
+        ],
+        "artifact": {
+            "ewma": [],
+            "strength_preserved": False,
+            "warnings": errors,
+            "input_valid": False,
+            "raw_health_data_sent_to_openai": False,
+        },
+    }
+
+
 def analyze(payload: dict[str, str]) -> dict[str, Any]:
-    daily = by_date(csv_rows(payload["daily"]))
-    workouts = by_date(csv_rows(payload["workouts"]))
-    body = by_date(json.loads(payload["body"]))
+    daily = csv_rows(payload["daily"])
+    workouts = csv_rows(payload["workouts"])
+    try:
+        body = json.loads(payload["body"])
+    except json.JSONDecodeError as error:
+        return invalid_evidence_result([f"Invalid body scan JSON: {error.msg}"], daily, workouts, [])
+    errors = validate_inputs(daily, workouts, body)
+    if errors:
+        return invalid_evidence_result(
+            errors,
+            daily,
+            workouts,
+            body if isinstance(body, list) else [],
+        )
+    daily = by_date(daily)
+    workouts = by_date(workouts)
+    body = by_date(body)
     trend = ewma([float(row["weight_kg"]) for row in daily])
     lifts = []
     warnings = []
-    for exercise in ("Bench Press", "Deadlift", "Squat"):
+    for exercise in REQUIRED_EXERCISES:
         rows = [row for row in workouts if row["exercise"] == exercise]
         if len(rows) < 2:
             lifts.append({"exercise": exercise, "first_1rm": None, "latest_1rm": None, "change_pct": None, "state": "INSUFFICIENT"})
@@ -88,7 +204,7 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
         "metrics": {"weight_change_kg": round(weight_change, 1), "body_fat_change_pp": round(fat_change, 1), "lean_mass_change_kg": round(lean_change, 1)},
         "items": lifts,
         "evidence": [{"label": "daily observations", "value": str(len(daily))}, {"label": "body scans", "value": str(len(body))}, {"label": "average protein", "value": f"{mean(float(row['protein_g']) for row in daily):.0f} g/day"}],
-        "artifact": {"ewma": [round(value, 2) for value in trend], "strength_preserved": strength_preserved, "warnings": warnings, "raw_health_data_sent_to_openai": False},
+        "artifact": {"ewma": [round(value, 2) for value in trend], "strength_preserved": strength_preserved, "warnings": warnings, "input_valid": True, "raw_health_data_sent_to_openai": False},
     }
 
 
@@ -97,6 +213,7 @@ def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
         "thirty_day_trend": len(result["artifact"]["ewma"]) == 30,
         "three_strength_markers": len(result["items"]) == 3 and all(item["state"] == "PRESERVED" for item in result["items"]),
         "classification": result["status"] == "FAT_LOSS_WITH_STRENGTH_PRESERVED",
+        "input_valid": result["artifact"]["input_valid"],
         "privacy": result["artifact"]["raw_health_data_sent_to_openai"] is False,
     }
     return all(checks.values()), checks

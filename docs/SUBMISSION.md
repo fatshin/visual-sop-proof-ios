@@ -21,6 +21,7 @@ public demo uses synthetic tested data, and raw health data remains local.
 ## Proof
 
 - 30-day synthetic normalized export
+- 30 distinct consecutive daily dates with duplicate rejection
 - all 3 strength markers preserved or improved
 - two scans show a body-fat percentage decline with lean mass preserved
 - no raw health data is transmitted

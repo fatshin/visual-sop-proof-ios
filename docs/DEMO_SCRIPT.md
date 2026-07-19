@@ -6,4 +6,6 @@
 4. Read body-fat and lean-mass changes.
 5. Show all three required strength markers and explain that any missing or
    declining marker changes the result to `REVIEW_NEEDED`.
-6. Open the artifact and confirm raw data was not sent to OpenAI.
+6. Explain that gaps, duplicate dates, empty scans, or duplicate workouts also
+   return `REVIEW_NEEDED` before classification.
+7. Open the artifact and confirm raw data was not sent to OpenAI.

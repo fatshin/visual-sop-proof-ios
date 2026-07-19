@@ -62,6 +62,7 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(result["status"], "REVIEW_NEEDED")
         self.assertEqual(deadlift["state"], "INSUFFICIENT")
         self.assertIsNone(deadlift["change_pct"])
+        self.assertFalse(result["artifact"]["input_valid"])
 
     def test_input_order_does_not_change_result(self):
         daily_lines = product.DAILY.splitlines()
@@ -74,6 +75,67 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(result["status"], baseline["status"])
         self.assertEqual(result["items"], baseline["items"])
         self.assertEqual(result["metrics"], baseline["metrics"])
+
+    def test_daily_dates_must_be_thirty_distinct_and_consecutive(self):
+        lines = product.DAILY.splitlines()
+        too_short = product.analyze({
+            "daily": "\n".join(lines[:-1]),
+            "workouts": product.WORKOUTS,
+            "body": product.BODY,
+        })
+        self.assertEqual(too_short["status"], "REVIEW_NEEDED")
+        self.assertIn("Exactly 30", too_short["headline"])
+
+        duplicate = lines.copy()
+        duplicate[-1] = duplicate[-2]
+        result = product.analyze({
+            "daily": "\n".join(duplicate),
+            "workouts": product.WORKOUTS,
+            "body": product.BODY,
+        })
+        self.assertEqual(result["status"], "REVIEW_NEEDED")
+        self.assertIn("Daily observation dates must be distinct.", result["artifact"]["warnings"])
+
+        gap = lines.copy()
+        fields = gap[-1].split(",")
+        fields[0] = "2026-07-20"
+        gap[-1] = ",".join(fields)
+        result = product.analyze({
+            "daily": "\n".join(gap),
+            "workouts": product.WORKOUTS,
+            "body": product.BODY,
+        })
+        self.assertIn("Daily observations must cover consecutive calendar dates.", result["artifact"]["warnings"])
+
+    def test_empty_or_duplicate_body_scans_require_review(self):
+        empty = product.analyze({
+            "daily": product.DAILY,
+            "workouts": product.WORKOUTS,
+            "body": "[]",
+        })
+        self.assertEqual(empty["status"], "REVIEW_NEEDED")
+        self.assertIn("At least two body scans", empty["headline"])
+
+        scans = json.loads(product.BODY)
+        scans[1]["date"] = scans[0]["date"]
+        duplicate = product.analyze({
+            "daily": product.DAILY,
+            "workouts": product.WORKOUTS,
+            "body": json.dumps(scans),
+        })
+        self.assertEqual(duplicate["status"], "REVIEW_NEEDED")
+        self.assertIn("Body scan dates must be distinct.", duplicate["artifact"]["warnings"])
+
+    def test_duplicate_workout_observation_requires_review(self):
+        lines = product.WORKOUTS.splitlines()
+        duplicated = "\n".join([*lines, lines[1]])
+        result = product.analyze({
+            "daily": product.DAILY,
+            "workouts": duplicated,
+            "body": product.BODY,
+        })
+        self.assertEqual(result["status"], "REVIEW_NEEDED")
+        self.assertIn("Workout date/exercise observations must be unique.", result["artifact"]["warnings"])
 
 
 if __name__ == "__main__":
