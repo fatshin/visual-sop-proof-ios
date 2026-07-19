@@ -79,6 +79,21 @@ class ProductTests(unittest.TestCase):
             )
         )
 
+    def test_zero_exception_to_below_one_rejection_cannot_be_ready(self):
+        payload = {field.name: field.value for field in product.PRODUCT.fields}
+        payload["transcript"] = product.TRANSCRIPT.replace(
+            "Checkout must reject a quantity below 1.",
+            "Checkout must reject quantity below 1, except quantity zero must be accepted.",
+        )
+        result = product.analyze(payload)
+        self.assertEqual(result["status"], "NEEDS_CLARIFICATION")
+        self.assertTrue(
+            any(
+                "Contradictory requirement wording: REQ-1" in error
+                for error in result["artifact"]["ambiguities"]
+            )
+        )
+
     def test_unsupported_source_cannot_be_ready(self):
         payload = {field.name: field.value for field in product.PRODUCT.fields}
         payload["source"] = 'def checkout(quantity, total, manager_token="", order_id=""):\n    return {"ok": True}'

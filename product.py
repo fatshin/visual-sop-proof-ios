@@ -33,7 +33,13 @@ REQUIREMENT_TESTS = {
     "REQ-4": ("test_retry_uses_idempotency_key", re.compile(r"\bretry\b.+\bnot create\b.+\bsecond charge\b", re.I)),
 }
 CONTRADICTION_PATTERNS = {
-    "REQ-1": re.compile(r"\b(?:allow|accept)\b.+\bquantity\b.+\bbelow 1\b", re.I),
+    "REQ-1": re.compile(
+        r"\b(?:allow|accept)\b.+\bquantity\b.+\bbelow 1\b"
+        r"|(?=.*\breject\b.+\bquantity\b.+\bbelow 1\b)"
+        r"(?=.*(?:\b(?:allow|accept)\b.+\b(?:quantity\s+)?zero\b"
+        r"|\b(?:quantity\s+)?zero\b.+\b(?:allow|accept|accepted)\b))",
+        re.I,
+    ),
     "REQ-2": re.compile(r"\b(?:no|not)\b.+\bmanager approval\b|\bdo(?:es)? not require\b.+\bapproval\b", re.I),
     "REQ-3": re.compile(r"\b(?:must not|should not|omit)\b.+\border ID\b", re.I),
     "REQ-4": re.compile(
