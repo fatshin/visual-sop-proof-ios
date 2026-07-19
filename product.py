@@ -29,6 +29,10 @@ CLAIM_PATTERNS = {
     "residency_date": r"(?im)^\s*you must have lived in the city by\s+(20\d{2}-\d{2}-\d{2})\b",
     "faq_contact": r"(?im)^\s*(?:questions?|faq contact)\s*:\s*([\w.+-]+@[\w.-]+)\s*$",
 }
+UNSUPPORTED_LATE_APPLICATION = re.compile(
+    r"(?im)^\s*(?:(?:applications?\s+(?:submitted\s+)?)?after\s+the\s+deadline|late\s+applications?)\s+"
+    r"(?:(?:may|will|can)\s+(?:still\s+)?be|are)\s+accepted[.!]?\s*$"
+)
 
 
 def extract_labeled_claim(notice: str, source_key: str) -> str:
@@ -67,7 +71,7 @@ def inspect_notice(notice: str, source: dict[str, Any]) -> list[dict[str, str]]:
                     f"owner drafts and approves the {label} wording."
                 ),
             })
-    if "after the deadline may still be accepted" in notice.lower():
+    if UNSUPPORTED_LATE_APPLICATION.search(notice):
         findings.append({
             "id": "UNSUPPORTED_EXCEPTION",
             "severity": "MEDIUM",

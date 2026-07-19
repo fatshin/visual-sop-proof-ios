@@ -86,6 +86,31 @@ Press: benefits@example.go.jp"""
             if item["id"] != "UNSUPPORTED_EXCEPTION":
                 self.assertIn(f"source.{item['source']}", item["repair"])
 
+    def test_late_application_promise_paraphrases_are_detected(self):
+        source = json.loads(product.SOURCE)
+        corrected = """Emergency Support Benefit
+Apply by 2026-08-31 at 23:59.
+Every resident aged 18 or older receives ¥50,000 automatically.
+You must have lived in the city by 2026-04-01.
+Questions: benefits@example.go.jp"""
+        for promise in (
+            "Late applications will be accepted.",
+            "Applications after the deadline can still be accepted.",
+            "Applications submitted after the deadline may still be accepted.",
+        ):
+            findings = product.inspect_notice(f"{corrected}\n{promise}", source)
+            self.assertIn("UNSUPPORTED_EXCEPTION", {item["id"] for item in findings})
+
+    def test_late_application_rejection_is_not_a_false_positive(self):
+        source = json.loads(product.SOURCE)
+        notice = """Emergency Support Benefit
+Apply by 2026-08-31 at 23:59.
+Every resident aged 18 or older receives ¥50,000 automatically.
+You must have lived in the city by 2026-04-01.
+Questions: benefits@example.go.jp
+Late applications will not be accepted."""
+        self.assertEqual(product.inspect_notice(notice, source), [])
+
 
 if __name__ == "__main__":
     unittest.main()
