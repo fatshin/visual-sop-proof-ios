@@ -61,6 +61,24 @@ class ProductTests(unittest.TestCase):
         self.assertEqual(nonsense["status"], "NEEDS_CLARIFICATION")
         self.assertTrue(any("Unsupported requirement wording" in item for item in nonsense["artifact"]["ambiguities"]))
 
+    def test_contradictory_requirement_cannot_be_ready(self):
+        payload = {field.name: field.value for field in product.PRODUCT.fields}
+        payload["transcript"] = product.TRANSCRIPT.replace(
+            "Checkout must reject a quantity below 1.",
+            (
+                "Checkout must reject a quantity below 1, but it may also allow "
+                "a quantity below 1."
+            ),
+        )
+        result = product.analyze(payload)
+        self.assertEqual(result["status"], "NEEDS_CLARIFICATION")
+        self.assertTrue(
+            any(
+                "Contradictory requirement wording: REQ-1" in error
+                for error in result["artifact"]["ambiguities"]
+            )
+        )
+
     def test_unsupported_source_cannot_be_ready(self):
         payload = {field.name: field.value for field in product.PRODUCT.fields}
         payload["source"] = 'def checkout(quantity, total, manager_token="", order_id=""):\n    return {"ok": True}'

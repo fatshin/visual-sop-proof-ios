@@ -32,6 +32,16 @@ REQUIREMENT_TESTS = {
     "REQ-3": ("test_receipt_includes_order_id", re.compile(r"\breceipt\b.+\bshow\b.+\border ID\b", re.I)),
     "REQ-4": ("test_retry_uses_idempotency_key", re.compile(r"\bretry\b.+\bnot create\b.+\bsecond charge\b", re.I)),
 }
+CONTRADICTION_PATTERNS = {
+    "REQ-1": re.compile(r"\b(?:allow|accept)\b.+\bquantity\b.+\bbelow 1\b", re.I),
+    "REQ-2": re.compile(r"\b(?:no|not)\b.+\bmanager approval\b|\bdo(?:es)? not require\b.+\bapproval\b", re.I),
+    "REQ-3": re.compile(r"\b(?:must not|should not|omit)\b.+\border ID\b", re.I),
+    "REQ-4": re.compile(
+        r"\bretry\b.+(?:\b(?:may|can)\b.+|\bmust create\b.+)"
+        r"\b(?:second|duplicate)\s+charge\b",
+        re.I,
+    ),
+}
 EXPECTED_REQUIREMENT_IDS = set(REQUIREMENT_TESTS)
 BROKEN_BLOCK = (
     '    approved = total >= 500\n'
@@ -209,6 +219,13 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
         req["id"] for req in reqs
         if req["id"] in REQUIREMENT_TESTS and not REQUIREMENT_TESTS[req["id"]][1].search(req["text"])
     )
+    contradictory_text = sorted(
+        req["id"] for req in reqs
+        if (
+            req["id"] in CONTRADICTION_PATTERNS
+            and CONTRADICTION_PATTERNS[req["id"]].search(req["text"])
+        )
+    )
     ambiguities = []
     if "Approval means a non-empty manager token." not in payload["transcript"]:
         ambiguities.append("Approval token definition is missing or unsupported.")
@@ -220,6 +237,10 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
         ambiguities.append(f"Unexpected requirement IDs: {', '.join(unexpected_ids)}.")
     if invalid_text:
         ambiguities.append(f"Unsupported requirement wording: {', '.join(invalid_text)}.")
+    if contradictory_text:
+        ambiguities.append(
+            f"Contradictory requirement wording: {', '.join(contradictory_text)}."
+        )
     ambiguities.extend(source_shape_errors(payload["source"].replace("\r\n", "\n").replace("\r", "\n")))
     ambiguities.extend(generated_validation_errors)
     if not patch:
