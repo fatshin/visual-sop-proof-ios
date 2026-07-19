@@ -4,7 +4,8 @@
 
 Misconception Replay checks the reasoning behind a correct fraction answer. It
 detects a misconception, supplies a targeted counterexample, and checks a
-different replay problem before reporting the misconception as resolved.
+pre-authored synthetic response to a different replay problem before reporting
+the fixture outcome as resolved.
 
 ## Judge path
 
@@ -23,6 +24,8 @@ different replay problem before reporting the misconception as resolved.
 - 20 labeled synthetic cases spanning five distinct fraction problems;
 - misconception-specific counterexamples;
 - deterministic replay answers and reasoning with `RESOLVED`/`UNRESOLVED`;
+- explicit `INVALID_EVALUATION` for malformed case counts, duplicate IDs,
+  insufficient problem diversity, or an unexpected ground-truth distribution;
 - replay problems that must differ mathematically from the original;
 - reasoning checks tied to the replay’s actual fraction transformation;
 - exact ground-truth recovery, precision, recall, and F1 acceptance evidence.
@@ -44,8 +47,9 @@ gate.
 ## Limits
 
 The MVP covers deterministic fraction addition and three reasoning states.
-Replay success is evidence for this fixed fixture, not proof of durable learning
-or a substitute for a teacher.
+Replay responses are pre-authored synthetic fixture data, not live student
+attempts. Replay success is evidence for this fixed fixture, not proof of
+durable learning or a substitute for a teacher.
 
 ## License
 

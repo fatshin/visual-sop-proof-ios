@@ -8,15 +8,16 @@
 ## What it does
 
 The product scores a learner’s answer separately from the explanation, detects
-correct answers supported by incorrect reasoning, and uses a mathematically
-different contrastive replay to test the corrected mental model.
+correct answers supported by incorrect reasoning, and verifies a pre-authored
+synthetic response to a mathematically different contrastive replay.
 
 ## How it was built
 
 I used Codex with GPT-5.6 to implement answer/reason separation, misconception
-labels, replay generation, a twenty-case evaluation, tests, and the public
-interface. A future live path can use GPT-5.6 to classify open-ended
-explanations and draft replays; the public demo uses a tested fixture.
+labels, replay-fixture validation, a twenty-case evaluation, tests, and the
+public interface. A future live path can use GPT-5.6 to classify open-ended
+explanations and draft replays; the public demo neither generates a replay nor
+records a live learner attempt.
 
 ## Proof
 
@@ -34,4 +35,5 @@ explanations and draft replays; the public demo uses a tested fixture.
 
 ## Limits
 
-The metric applies only to the included synthetic evaluation set.
+The metrics and resolved outcomes apply only to the included pre-authored
+synthetic evaluation set.

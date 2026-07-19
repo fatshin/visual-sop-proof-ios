@@ -122,8 +122,82 @@ def counterexample_for(misconception: str, replay_problem: str, replay_answer: s
     return f"Show equivalent fractions for {replay_problem}, then justify why the answer is {replay_answer}."
 
 
+def evaluation_errors(cases: Any) -> list[str]:
+    if not isinstance(cases, list):
+        return ["Cases must be a JSON array."]
+    errors = []
+    if len(cases) != 20:
+        errors.append(f"Expected exactly 20 cases; got {len(cases)}.")
+    required = {
+        "id", "problem", "answer", "reasoning", "label",
+        "replay_problem", "replay_answer", "replay_reasoning",
+    }
+    invalid_rows = [
+        index
+        for index, case in enumerate(cases, start=1)
+        if not isinstance(case, dict)
+        or any(not isinstance(case.get(key), str) or not case[key].strip() for key in required)
+    ]
+    if invalid_rows:
+        errors.append(f"Missing or non-text fields in cases: {invalid_rows}.")
+        return errors
+    ids = [case["id"] for case in cases]
+    if len(set(ids)) != len(ids):
+        errors.append("Case IDs must be unique.")
+    unique_problems = {case["problem"] for case in cases}
+    if len(unique_problems) < 5:
+        errors.append(f"Expected at least 5 distinct starting problems; got {len(unique_problems)}.")
+    label_counts = {
+        label: sum(case["label"] == label for case in cases)
+        for label in ("ADD_BOTH_PARTS", "CORRECT")
+    }
+    unsupported_labels = sorted({
+        case["label"] for case in cases
+        if case["label"] not in label_counts
+    })
+    if unsupported_labels:
+        errors.append(f"Unsupported ground-truth labels: {', '.join(unsupported_labels)}.")
+    if label_counts != {"ADD_BOTH_PARTS": 5, "CORRECT": 15}:
+        errors.append(f"Expected ground truth 5 ADD_BOTH_PARTS / 15 CORRECT; got {label_counts}.")
+    return errors
+
+
 def analyze(payload: dict[str, str]) -> dict[str, Any]:
     cases = json.loads(payload["cases"])
+    errors = evaluation_errors(cases)
+    if errors:
+        case_count = len(cases) if isinstance(cases, list) else 0
+        unique_problems = (
+            len({
+                case.get("problem")
+                for case in cases
+                if isinstance(case, dict) and isinstance(case.get("problem"), str)
+            })
+            if isinstance(cases, list)
+            else 0
+        )
+        return {
+            "status": "INVALID_EVALUATION",
+            "headline": errors[0],
+            "metrics": {
+                "cases": case_count,
+                "f1": None,
+                "misconceptions": 0,
+                "resolved": 0,
+                "unique_problems": unique_problems,
+            },
+            "items": [],
+            "evidence": [],
+            "artifact": {
+                "evaluation_errors": errors,
+                "precision": 0.0,
+                "recall": 0.0,
+                "f1": 0.0,
+                "exact_classification": False,
+                "expected_misconceptions": 0,
+                "replay_outcomes": {"resolved": 0, "unresolved": 0},
+            },
+        }
     items, tp, fp, fn = [], 0, 0, 0
     for case in cases:
         predicted = classify(case["reasoning"])
@@ -175,6 +249,7 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
         "items": items,
         "evidence": [{"label": "taxonomy", "value": "ADD_BOTH_PARTS · INVERTED_FRACTION · UNRESOLVED"}],
         "artifact": {
+            "evaluation_errors": [],
             "precision": precision,
             "recall": recall,
             "f1": f1,
@@ -188,6 +263,7 @@ def analyze(payload: dict[str, str]) -> dict[str, Any]:
 def acceptance(result: dict[str, Any]) -> tuple[bool, dict[str, bool]]:
     flagged = [item for item in result["items"] if item["predicted"] == "ADD_BOTH_PARTS"]
     checks = {
+        "evaluation_valid": result["status"] == "EVAL_PASS" and not result["artifact"]["evaluation_errors"],
         "twenty_cases": result["metrics"]["cases"] == 20,
         "five_distinct_problems": result["metrics"]["unique_problems"] >= 5,
         "exact_ground_truth": (

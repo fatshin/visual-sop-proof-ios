@@ -28,7 +28,7 @@ export const product: Product = {
   name: "Misconception Replay",
   eyebrow: "Correct answer, wrong reason",
   tagline: "Find the misconception hidden behind a correct answer.",
-  description: "Compare a learner’s answer and explanation, diagnose the rule behind a lucky answer, then verify the correction on a different problem.",
+  description: "Compare a learner’s answer and explanation, diagnose the rule behind a lucky answer, then verify a pre-authored synthetic replay response on a different problem.",
   accent: "#ff9f1c",
   inputLabel: "Learner response set",
   inputHint: "These exact twenty labeled fraction cases are evaluated by product.py.",
@@ -40,13 +40,13 @@ export const product: Product = {
   findings: [
     { title: "Correct answers, incorrect rule", detail: "Five varied problems hide the same add-both-parts misconception behind a correct final answer.", badge: "MISCONCEPTION", tone: "bad" },
     { title: "Fixed-set F1 is 1.00", detail: "All five ADD_BOTH_PARTS labels are recovered in the twenty-case fixture.", badge: "EVAL", tone: "good" },
-    { title: "A mathematically different problem verifies repair", detail: "All five flagged cases answer a different fraction problem and give reasoning that matches its actual fraction transformation, producing RESOLVED.", badge: "REPLAY", tone: "good" },
+    { title: "Pre-authored replay responses pass verification", detail: "The synthetic fixture already contains five responses to different fraction problems. The evaluator verifies each answer and its actual fraction transformation before producing RESOLVED.", badge: "REPLAY", tone: "good" },
   ],
   method: [
     { step: "01", title: "Separate", detail: "Score the final answer independently from the learner’s causal explanation." },
     { step: "02", title: "Diagnose", detail: "Map the explanation to a specific misconception, not a generic wrong label." },
-    { step: "03", title: "Replay", detail: "Use a different contrastive problem and mark RESOLVED only when both answer and reasoning are correct." },
+    { step: "03", title: "Replay", detail: "Verify the fixture’s pre-authored response to a different contrastive problem; mark RESOLVED only when both answer and reasoning are correct." },
   ],
   proof: ["Exact ground-truth recovery", "Mathematically different replays", "Reasoning-checked outcomes"],
-  note: "The learner responses are synthetic. The fixture F1 measures only the included evaluation set.",
+  note: "The learner and replay responses are pre-authored synthetic fixtures, not live student attempts or generated tutoring. The F1 score measures only this fixed evaluation set.",
 };

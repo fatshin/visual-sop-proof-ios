@@ -52,6 +52,7 @@ class ProductTests(unittest.TestCase):
         passed, checks = product.acceptance(result)
         self.assertFalse(passed)
         self.assertFalse(checks["five_distinct_problems"])
+        self.assertEqual(result["status"], "INVALID_EVALUATION")
 
     def test_same_problem_cannot_resolve_replay(self):
         cases = json.loads(product.CASE_DATA)
@@ -81,7 +82,18 @@ class ProductTests(unittest.TestCase):
         passed, checks = product.acceptance(result)
         self.assertFalse(passed)
         self.assertFalse(checks["exact_ground_truth"])
-        self.assertEqual(result["status"], "EVAL_FAIL")
+        self.assertEqual(result["status"], "INVALID_EVALUATION")
+
+    def test_case_count_and_duplicate_ids_are_invalid_evaluations(self):
+        cases = json.loads(product.CASE_DATA)
+        too_short = product.analyze({"cases": json.dumps(cases[:-1])})
+        self.assertEqual(too_short["status"], "INVALID_EVALUATION")
+        self.assertIn("exactly 20", too_short["headline"])
+
+        cases[1]["id"] = cases[0]["id"]
+        duplicate = product.analyze({"cases": json.dumps(cases)})
+        self.assertEqual(duplicate["status"], "INVALID_EVALUATION")
+        self.assertIn("Case IDs must be unique.", duplicate["artifact"]["evaluation_errors"])
 
     def test_counterexample_is_misconception_specific(self):
         inverted = product.counterexample_for("INVERTED_FRACTION", "1/2 + 1/2", "1")
