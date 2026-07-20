@@ -10,13 +10,32 @@ import product
 
 
 class OracleCouncilTests(unittest.TestCase):
+    def birth(self, **changes: str) -> product.BirthContext:
+        values = {
+            "birth_date": "1990-04-18",
+            "birth_time": "around 08:00",
+            "birth_place": "Tokyo, Japan",
+            "time_precision": "approximate",
+            "place_precision": "exact",
+        }
+        values.update(changes)
+        return product.BirthContext(**values)
+
     def test_sample_reading_uses_all_ten_methods(self) -> None:
         records = product.sample_records()
-        reading = product.create_reading("次の仕事に向けて何を準備するべきですか", records)
+        reading = product.create_reading(
+            "What should I prepare before changing roles?", records, self.birth()
+        )
         self.assertEqual(reading["status"], "REFLECTION_READY")
         self.assertEqual(len(reading["readings"]), 10)
         self.assertEqual(reading["memory_count"], 4)
-        self.assertIn("娯楽と内省", reading["disclaimer"])
+        self.assertIn("entertainment and reflection", reading["disclaimer"])
+        self.assertEqual(reading["birth_context"]["time_precision"], "approximate")
+        self.assertTrue(all(len(item["actions"]) == 3 for item in reading["readings"]))
+        self.assertEqual(reading["readings"][4]["symbol"], "Aries Sun · morning")
+        self.assertEqual(reading["readings"][6]["symbol"], "Life Path 5")
+        self.assertIn("work", reading["synthesis"])
+        self.assertNotIn("仕事", reading["synthesis"])
 
     def test_chatgpt_parser_uses_user_messages_only(self) -> None:
         fixture = [
@@ -145,23 +164,48 @@ class OracleCouncilTests(unittest.TestCase):
 
     def test_question_and_selection_are_validated(self) -> None:
         with self.assertRaisesRegex(ValueError, "at least 4"):
-            product.create_reading("今?", product.sample_records())
+            product.create_reading("No?", product.sample_records(), self.birth())
         with self.assertRaisesRegex(ValueError, "Select at least one"):
-            product.create_reading("今後どうするべきですか", [])
+            product.create_reading("What should I do next?", [], self.birth())
+
+    def test_birth_date_time_and_place_are_required_but_unknown_is_allowed(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Birth time is required"):
+            product.validate_birth_context(self.birth(birth_time=""))
+        with self.assertRaisesRegex(ValueError, "Birth place is required"):
+            product.validate_birth_context(self.birth(birth_place=""))
+        self.assertEqual(
+            product.validate_birth_context(
+                self.birth(
+                    birth_time="unknown",
+                    birth_place="unknown",
+                    time_precision="unknown",
+                    place_precision="unknown",
+                )
+            ).isoformat(),
+            "1990-04-18",
+        )
+
+    def test_future_birth_date_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "future"):
+            product.validate_birth_context(self.birth(birth_date="2999-01-01"))
 
     def test_obsidian_export_contains_sources_and_review_boundary(self) -> None:
         records = product.sample_records()
-        reading = product.create_reading("今後どうするべきですか", records)
+        reading = product.create_reading("What should I do next?", records, self.birth())
         note = product.export_obsidian_markdown(reading, records)
         self.assertIn("type: oracle-council-reading", note)
-        self.assertIn("## 使用した記憶", note)
-        self.assertIn("## 7日後の振り返り", note)
-        self.assertIn("娯楽と内省", note)
+        self.assertIn("## Birth context", note)
+        self.assertIn("## Memories used", note)
+        self.assertIn("## Seven-day review", note)
+        self.assertIn("entertainment and reflection", note)
+        self.assertEqual(note.count("**Three ways to act**"), 10)
+        self.assertIn("  - work", note)
+        self.assertNotIn("  - 仕事", note)
 
     def test_reading_is_deterministic_for_same_inputs(self) -> None:
         records = product.sample_records()
-        first = product.create_reading("今後どうするべきですか", records)
-        second = product.create_reading("今後どうするべきですか", records)
+        first = product.create_reading("What should I do next?", records, self.birth())
+        second = product.create_reading("What should I do next?", records, self.birth())
         self.assertEqual(first, second)
 
 

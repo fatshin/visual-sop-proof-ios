@@ -2,35 +2,39 @@
 
 ## Title
 
-Oracle Council — ObsidianとChatGPTの記憶を10の占術で読み直す
+Oracle Council — 10 Symbolic Readings Grounded in Your Own Memory
 
 ## Description
 
-未来を占う前に、自分の記憶を読む。
+Before asking the future, read your own evidence.
 
-Oracle Councilは、ユーザーが選んだObsidianノート、ChatGPTのMemory
-summary、ChatGPT会話内のユーザー発言を、易・四柱推命・九星気学・
-宿曜・西洋占星術・タロット・数秘術・ルーン・ジオマンシー・
-月相の10の象徴体系で読み直す内省ツールです。
+Oracle Council is a bilingual, local-first reflection tool. It connects
+required birth context with Obsidian notes, a ChatGPT Memory summary, and user
+messages from a ChatGPT conversation export.
 
-取り込んだ記憶はブラウザ内で処理され、外部へ送信されません。
-ユーザーは出典を確認し、占いに使用する記憶を自分で選択できます。
-結果はObsidian用Markdownとして保存し、7日後に実際の行動と照らして
-振り返れます。
+The same question is explored through ten symbolic lenses: I Ching, a Four
+Pillars-inspired balance lens, a Nine Star Ki-inspired timing lens, a
+Sukuyō-inspired relationship lens, Western astrology, tarot, numerology,
+runes, geomancy, and lunar-calendar cadence.
 
-ブラウザ版では、ObsidianのMarkdownファイルまたはフォルダ、
-展開済みのChatGPT `conversations.json`、Memory summaryの貼り付けを
-利用できます。元のChatGPTエクスポートZIPはローカルCLI版で
-読み込めます。
+Birth date, birth time, and birth place are required. Approximate or unknown
+details are welcome when the uncertainty is labelled. Every lens explains what
+it sees, shows why it connects to a selected memory, and offers three concrete
+actions. English is the default, with a full Japanese switch.
 
-この結果は娯楽と内省のためのものです。医療、法律、投資、安全に
-関する判断には使用できません。
+Imported memories are processed in the browser and selected by the user before
+interpretation. Results can be saved as an Obsidian Markdown note and reviewed
+against what actually happened seven days later.
+
+This is entertainment and structured reflection, not factual prediction or a
+substitute for medical, legal, financial, or safety judgment.
 
 ## Thumbnail text
 
-未来より先に
-記憶を読む
+YOUR MEMORY
+10 READINGS
+3 ACTIONS EACH
 
 ## Hashtags
 
-#Obsidian #ChatGPT #タロット #占星術 #易経 #BuildWithAI
+#Obsidian #ChatGPT #Tarot #Astrology #IChing #BuildWithAI

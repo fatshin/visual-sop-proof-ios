@@ -6,12 +6,18 @@ python3 -m unittest discover -s tests -v
 python3 product.py \
   --obsidian fixtures/obsidian-vault \
   --memory-text "$(cat fixtures/chatgpt-memory.txt)" \
-  --question "次の仕事へ進むために、今どの準備を始めるべきですか" \
+  --birth-date 1990-04-18 \
+  --birth-time "around 08:00" \
+  --birth-place "Tokyo, Japan" \
+  --time-precision approximate \
+  --place-precision exact \
+  --language en \
+  --question "What evidence should I create before moving into my next role?" \
   --output /tmp/oracle-council-reading.md \
   >/tmp/oracle-council-result.json
 python3 -m json.tool /tmp/oracle-council-result.json >/dev/null
 node --check site/public/app.js
-node --test site/tests/privacy.test.mjs
+node --test site/tests/*.test.mjs
 test -s /tmp/oracle-council-reading.md
 test -f site/public/oracle.html
 test -f site/public/app.js

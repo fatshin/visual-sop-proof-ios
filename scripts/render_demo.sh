@@ -4,12 +4,12 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 frames=(
-  artifacts/screenshots/01-hero.jpg
-  artifacts/screenshots/02-memory-import.jpg
-  artifacts/screenshots/03-memory-consent.jpg
-  artifacts/screenshots/04-synthesis.jpg
-  artifacts/screenshots/05-ten-readings.jpg
-  artifacts/screenshots/06-obsidian-export.jpg
+  artifacts/screenshots/01-hero.png
+  artifacts/screenshots/02-birth-context.png
+  artifacts/screenshots/03-memory-consent.png
+  artifacts/screenshots/04-synthesis.png
+  artifacts/screenshots/05-ten-readings.png
+  artifacts/screenshots/06-obsidian-export.png
 )
 
 for frame in "${frames[@]}"; do
@@ -19,7 +19,7 @@ done
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-say -v Kyoko -r 205 -f artifacts/demo/narration.txt -o "$work/narration.aiff"
+say -v Samantha -r 190 -f artifacts/demo/narration.txt -o "$work/narration.aiff"
 audio_duration="$(
   ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$work/narration.aiff"
 )"

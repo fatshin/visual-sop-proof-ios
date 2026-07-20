@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="ObsidianとChatGPTの記憶を、10の占術で読み直すローカルファーストの内省ツール">
-    <title>Oracle Council — 記憶を読み、次の一歩を選ぶ</title>
+    <meta name="description" content="A local-first reflection tool that grounds ten symbolic traditions in your birth context and selected Obsidian and ChatGPT memories.">
+    <title>Oracle Council — Ground symbols in your own history</title>
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
@@ -14,20 +14,26 @@
         <span class="brand-mark">◌</span>
         <span>ORACLE COUNCIL</span>
       </a>
-      <div class="privacy-pill"><span></span> LOCAL ONLY</div>
+      <div class="nav-tools">
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="en" aria-pressed="true">EN</button>
+          <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
+        </div>
+        <div class="privacy-pill"><span></span> LOCAL ONLY</div>
+      </div>
     </header>
 
     <main id="top">
       <section class="hero">
-        <p class="eyebrow">TEN TRADITIONS. YOUR OWN MEMORY.</p>
-        <h1>未来を占う前に、<br><em>自分の記憶</em>を読む。</h1>
-        <p class="lead">
-          ObsidianのノートとChatGPTの記憶を、易・タロット・占星術など
-          10の象徴体系で読み直します。外部送信はありません。
+        <p class="eyebrow" data-i18n="heroEyebrow">TEN TRADITIONS. YOUR BIRTH CONTEXT. YOUR MEMORY.</p>
+        <h1 data-i18n-html="heroTitle">Before asking the future,<br><em>read your own evidence.</em></h1>
+        <p class="lead" data-i18n="heroLead">
+          Connect birth context with selected Obsidian notes and ChatGPT memories.
+          Every reading explains why it may fit and offers three concrete actions.
         </p>
         <div class="hero-actions">
-          <button class="primary" id="start-demo">サンプルで始める <span>→</span></button>
-          <a href="#import">自分の記憶を選ぶ</a>
+          <button class="primary" id="start-demo"><span data-i18n="startSample">Start with a sample</span> <span>→</span></button>
+          <a href="#birth" data-i18n="enterContext">Enter my context</a>
         </div>
         <div class="orbit" aria-hidden="true">
           <div class="orbit-ring ring-one"></div>
@@ -37,38 +43,85 @@
         </div>
       </section>
 
-      <section class="traditions" aria-label="対応する占術">
-        <div>易経 <span>01</span></div>
-        <div>四柱推命 <span>02</span></div>
-        <div>九星気学 <span>03</span></div>
-        <div>宿曜 <span>04</span></div>
-        <div>西洋占星術 <span>05</span></div>
-        <div>タロット <span>06</span></div>
-        <div>数秘術 <span>07</span></div>
-        <div>ルーン <span>08</span></div>
-        <div>ジオマンシー <span>09</span></div>
-        <div>月相・暦 <span>10</span></div>
+      <section class="traditions" aria-label="Ten symbolic traditions">
+        <div><span data-tradition="0">I Ching</span> <b>01</b></div>
+        <div><span data-tradition="1">Four Pillars-inspired</span> <b>02</b></div>
+        <div><span data-tradition="2">Nine Star Ki-inspired</span> <b>03</b></div>
+        <div><span data-tradition="3">Sukuyō-inspired</span> <b>04</b></div>
+        <div><span data-tradition="4">Western astrology-inspired</span> <b>05</b></div>
+        <div><span data-tradition="5">Tarot</span> <b>06</b></div>
+        <div><span data-tradition="6">Numerology</span> <b>07</b></div>
+        <div><span data-tradition="7">Runes</span> <b>08</b></div>
+        <div><span data-tradition="8">Geomancy</span> <b>09</b></div>
+        <div><span data-tradition="9">Lunar cadence</span> <b>10</b></div>
+      </section>
+
+      <section class="birth-section" id="birth">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="birthEyebrow">REQUIRED BIRTH CONTEXT</p>
+          <h2 data-i18n-html="birthHeading">Give the symbols<br>a real point of reference.</h2>
+          <p data-i18n="birthIntro">
+            Date, time, and place are required. Approximate or unknown information is accepted when you label its precision.
+          </p>
+        </div>
+        <div class="birth-card">
+          <div class="birth-grid">
+            <label class="field">
+              <span data-i18n="birthDate">Birth date</span>
+              <input id="birth-date" type="date" required>
+            </label>
+            <label class="field">
+              <span data-i18n="birthTime">Birth time</span>
+              <input id="birth-time" type="text" required placeholder="14:30 / morning / unknown" data-i18n-placeholder="birthTimePlaceholder">
+            </label>
+            <label class="field precision-field">
+              <span data-i18n="timePrecision">Time precision</span>
+              <select id="birth-time-precision">
+                <option value="exact" data-i18n="exact">Exact</option>
+                <option value="approximate" selected data-i18n="approximate">Approximate</option>
+                <option value="unknown" data-i18n="unknown">Unknown</option>
+              </select>
+            </label>
+            <label class="field">
+              <span data-i18n="birthPlace">Birth place</span>
+              <input id="birth-place" type="text" required placeholder="Tokyo / Kanto area / unknown" data-i18n-placeholder="birthPlacePlaceholder">
+            </label>
+            <label class="field precision-field">
+              <span data-i18n="placePrecision">Place precision</span>
+              <select id="birth-place-precision">
+                <option value="exact" data-i18n="exact">Exact</option>
+                <option value="approximate" selected data-i18n="approximate">Approximate</option>
+                <option value="unknown" data-i18n="unknown">Unknown</option>
+              </select>
+            </label>
+          </div>
+          <p class="birth-note" data-i18n="birthNote">
+            We keep these values in this browser session only. They improve context, but this demo does not calculate a full natal chart, BaZi chart, or lunar mansion.
+          </p>
+        </div>
       </section>
 
       <section class="workspace" id="import">
         <div class="section-heading">
-          <p class="eyebrow">MEMORY WORKSPACE</p>
-          <h2>占いに使う記憶を、<br>あなたが決める。</h2>
-          <p>読み込んだ内容はブラウザの中だけで処理されます。選択を外した記憶は結果に使用しません。</p>
+          <p class="eyebrow" data-i18n="memoryEyebrow">MEMORY EVIDENCE</p>
+          <h2 data-i18n-html="memoryHeading">You decide which memories<br>the reading may use.</h2>
+          <p data-i18n="memoryIntro">
+            Files are processed inside this browser. A deselected memory cannot appear in the result.
+          </p>
         </div>
 
         <div class="import-grid">
           <article class="source-card obsidian-card">
             <div class="source-icon">◇</div>
             <p class="source-label">OBSIDIAN</p>
-            <h3>Vaultのノート</h3>
-            <p>MarkdownファイルまたはVaultフォルダを選びます。設定フォルダは除外します。</p>
+            <h3 data-i18n="obsidianTitle">Vault notes</h3>
+            <p data-i18n="obsidianBody">Choose Markdown files or a vault folder. Hidden configuration folders are excluded.</p>
             <label class="file-button">
-              Markdownを選ぶ
+              <span data-i18n="chooseMarkdown">Choose Markdown</span>
               <input id="obsidian-files" type="file" accept=".md,text/markdown" multiple>
             </label>
             <label class="text-button">
-              Vaultフォルダを選ぶ
+              <span data-i18n="chooseVault">Choose vault folder</span>
               <input id="obsidian-folder" type="file" accept=".md,text/markdown" webkitdirectory multiple>
             </label>
           </article>
@@ -76,67 +129,65 @@
           <article class="source-card chatgpt-card">
             <div class="source-icon">✣</div>
             <p class="source-label">CHATGPT</p>
-            <h3>会話とMemory summary</h3>
-            <p>展開したconversations.json、または設定画面からコピーしたMemory summaryを使います。</p>
+            <h3 data-i18n="chatgptTitle">Conversations and Memory summary</h3>
+            <p data-i18n="chatgptBody">Use an extracted conversations.json or paste the Memory summary from settings.</p>
             <label class="file-button">
-              JSONを選ぶ
+              <span data-i18n="chooseJson">Choose JSON</span>
               <input id="chatgpt-file" type="file" accept=".json,application/json">
             </label>
-            <button class="text-button" id="toggle-memory">Memory summaryを貼る</button>
+            <button class="text-button" id="toggle-memory" data-i18n="pasteMemory">Paste Memory summary</button>
           </article>
         </div>
 
         <div class="memory-input hidden" id="memory-input">
-          <label for="memory-summary">ChatGPTのMemory summary</label>
-          <textarea id="memory-summary" rows="5" placeholder="・大きな決断では比較表があると安心する&#10;・一週間後に振り返る習慣がある"></textarea>
-          <button id="add-summary">記憶として追加する</button>
+          <label for="memory-summary" data-i18n="memorySummaryLabel">ChatGPT Memory summary</label>
+          <textarea id="memory-summary" rows="5" placeholder="• I feel safer when a big decision has comparison criteria&#10;• I review important choices after one week" data-i18n-placeholder="memorySummaryPlaceholder"></textarea>
+          <button id="add-summary" data-i18n="addMemory">Add as memories</button>
         </div>
 
         <div class="memory-review" id="memory-review">
           <div class="review-head">
             <div>
-              <p class="eyebrow">CONSENT BEFORE INTERPRETATION</p>
-              <h3>取り込んだ記憶</h3>
+              <p class="eyebrow" data-i18n="consentEyebrow">CONSENT BEFORE INTERPRETATION</p>
+              <h3 data-i18n="importedMemories">Imported memories</h3>
             </div>
             <div class="memory-count"><strong id="selected-count">0</strong><span>selected</span></div>
           </div>
-          <div id="memory-list" class="memory-list empty-state">
-            <p>まだ記憶は読み込まれていません。</p>
-            <button id="sample-inline">4件のサンプルを読み込む</button>
-          </div>
+          <div id="memory-list" class="memory-list empty-state"></div>
         </div>
       </section>
 
       <section class="question-section">
         <div class="question-card">
-          <p class="eyebrow">YOUR QUESTION</p>
-          <label for="question">今、何を読み解きたいですか。</label>
-          <textarea id="question" rows="3">次の仕事へ進むために、今どの準備を始めるべきですか</textarea>
+          <p class="eyebrow" data-i18n="questionEyebrow">YOUR QUESTION</p>
+          <label for="question" data-i18n="questionLabel">What do you need to understand now?</label>
+          <textarea id="question" rows="3">What evidence should I create before moving into my next role?</textarea>
           <div class="question-footer">
-            <p><span>!</span> 医療・法律・投資・安全の判断には使用できません。</p>
-            <button class="primary" id="create-reading">10の占術で読み解く <span>✦</span></button>
+            <p><span>!</span> <span data-i18n="highRiskWarning">Do not use this for medical, legal, financial, or safety decisions.</span></p>
+            <button class="primary" id="create-reading"><span data-i18n="createReading">Create ten grounded readings</span> <span>✦</span></button>
           </div>
         </div>
       </section>
 
       <section class="result hidden" id="result" aria-live="polite">
         <div class="result-intro">
-          <p class="eyebrow">THE COUNCIL HAS SPOKEN</p>
-          <h2>記憶と象徴が<br>重なる場所。</h2>
+          <p class="eyebrow" data-i18n="resultEyebrow">THE COUNCIL HAS SPOKEN</p>
+          <h2 data-i18n-html="resultHeading">Where birth context,<br>memory, and action meet.</h2>
+          <p id="birth-summary" class="birth-summary"></p>
           <p id="synthesis"></p>
           <div class="theme-row" id="theme-row"></div>
         </div>
         <div class="reading-grid" id="reading-grid"></div>
         <div class="next-step">
           <div>
-            <p class="eyebrow">A GROUNDED NEXT STEP</p>
-            <h3>占いを、行動に戻す。</h3>
-            <p>24時間以内に確認できる事実を一つ調べ、7日後にこの読みを振り返ってください。</p>
+            <p class="eyebrow" data-i18n="nextEyebrow">A GROUNDED NEXT STEP</p>
+            <h3 data-i18n="nextHeading">Return the reading to action.</h3>
+            <p data-i18n="nextBody">Choose one action from one lens within 24 hours, then review the evidence in seven days.</p>
           </div>
-          <button id="download-note">Obsidianノートを保存 <span>↓</span></button>
+          <button id="download-note"><span data-i18n="saveObsidian">Save an Obsidian note</span> <span>↓</span></button>
         </div>
-        <p class="disclaimer">
-          この結果は娯楽と内省のためのものです。未来の事実を予測したり、専門家の判断に代わったりするものではありません。
+        <p class="disclaimer" data-i18n="disclaimer">
+          This is entertainment and structured reflection, not a factual prediction or a substitute for professional judgment.
         </p>
       </section>
     </main>
