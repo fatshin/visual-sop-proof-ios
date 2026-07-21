@@ -1,4 +1,5 @@
 import { looksSensitive } from "./privacy.js";
+import { personalDataExportPrompt } from "./prompt.js";
 import {
   buildReadingMarkdown,
   createDeepReading,
@@ -42,6 +43,14 @@ const copy = {
     chatgptBody: "Use an extracted conversations.json or paste the Memory summary from settings.",
     chooseJson: "Choose JSON",
     pasteMemory: "Paste Memory summary",
+    exportPrompt: "Create a personal-data export prompt",
+    promptEyebrow: "SAFE EXPORT PROMPT",
+    promptTitle: "Ask ChatGPT to summarize usable personal context.",
+    promptIntro: "Paste this prompt into ChatGPT or another assistant, review its output, then paste only the memories you approve below.",
+    promptAriaLabel: "Personal-data export prompt",
+    copyPrompt: "Copy prompt",
+    promptCopied: "Personal-data export prompt copied",
+    promptCopyError: "Copy was blocked. Select the prompt and copy it manually.",
     memorySummaryLabel: "ChatGPT Memory summary",
     memorySummaryPlaceholder:
       "• I feel safer when a big decision has comparison criteria\n• I review important choices after one week",
@@ -116,6 +125,14 @@ const copy = {
     chatgptBody: "展開したconversations.json、または設定からコピーしたMemory summaryを使います。",
     chooseJson: "JSONを選ぶ",
     pasteMemory: "Memory summaryを貼る",
+    exportPrompt: "パーソナルデータ書き出しプロンプトを作る",
+    promptEyebrow: "安全な書き出しプロンプト",
+    promptTitle: "ChatGPTに、占いへ使える自分の文脈を整理させる。",
+    promptIntro: "このプロンプトをChatGPTなどへ貼り、出力を自分で確認してから、使用を許可する記憶だけを下へ貼り付けてください。",
+    promptAriaLabel: "パーソナルデータ書き出しプロンプト",
+    copyPrompt: "プロンプトをコピー",
+    promptCopied: "書き出しプロンプトをコピーしました",
+    promptCopyError: "自動コピーできませんでした。プロンプトを選択して手動でコピーしてください。",
     memorySummaryLabel: "ChatGPTのMemory summary",
     memorySummaryPlaceholder:
       "・大きな決断では比較基準があると安心する\n・重要な選択は一週間後に振り返る",
@@ -296,6 +313,9 @@ function setLanguage(lang, { replaceQuestion = true } = {}) {
   document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
     element.placeholder = copy[state.lang][element.dataset.i18nPlaceholder];
   });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+    element.setAttribute("aria-label", copy[state.lang][element.dataset.i18nAriaLabel]);
+  });
   document.querySelectorAll("[data-lang]").forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.lang === state.lang));
   });
@@ -303,6 +323,9 @@ function setLanguage(lang, { replaceQuestion = true } = {}) {
     element.textContent = traditionNames[state.lang][Number(element.dataset.tradition)];
   });
   if (replaceQuestion && !state.reading) byId("question").value = copy[state.lang].defaultQuestion;
+  if (!byId("prompt-output").classList.contains("hidden")) {
+    byId("personal-data-prompt").value = personalDataExportPrompt(state.lang);
+  }
   renderMemories();
   if (state.reading) createReading();
 }
@@ -461,6 +484,24 @@ function addMemorySummary() {
   showToast(copy[state.lang].summaryLoaded(added));
 }
 
+function showExportPrompt() {
+  byId("personal-data-prompt").value = personalDataExportPrompt(state.lang);
+  byId("prompt-output").classList.remove("hidden");
+  byId("prompt-output").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+async function copyExportPrompt() {
+  const prompt = byId("personal-data-prompt").value;
+  try {
+    await navigator.clipboard.writeText(prompt);
+    showToast(copy[state.lang].promptCopied);
+  } catch {
+    byId("personal-data-prompt").focus();
+    byId("personal-data-prompt").select();
+    showToast(copy[state.lang].promptCopyError);
+  }
+}
+
 function detectThemes(memories) {
   const text = memories.map((item) => item.text.toLowerCase()).join(" ");
   return Object.entries(themeTerms)
@@ -576,6 +617,8 @@ document.querySelectorAll("[data-lang]").forEach((button) => {
 });
 byId("start-demo").addEventListener("click", loadSamples);
 byId("toggle-memory").addEventListener("click", () => byId("memory-input").classList.toggle("hidden"));
+byId("show-export-prompt").addEventListener("click", showExportPrompt);
+byId("copy-export-prompt").addEventListener("click", copyExportPrompt);
 byId("add-summary").addEventListener("click", addMemorySummary);
 byId("obsidian-files").addEventListener("change", (event) => readObsidianFiles(event.target.files));
 byId("obsidian-folder").addEventListener("change", (event) => readObsidianFiles(event.target.files));

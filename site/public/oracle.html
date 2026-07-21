@@ -96,7 +96,7 @@
             </label>
           </div>
           <p class="birth-note" data-i18n="birthNote">
-            We keep these values in this browser session only. They improve context, but this demo does not calculate a full natal chart, BaZi chart, or lunar mansion.
+            These values stay in this browser session only. A downloaded note will include the birth details you entered, so review it before sharing. This demo does not calculate a full natal chart, BaZi chart, or lunar mansion.
           </p>
         </div>
       </section>
@@ -136,7 +136,16 @@
               <input id="chatgpt-file" type="file" accept=".json,application/json">
             </label>
             <button class="text-button" id="toggle-memory" data-i18n="pasteMemory">Paste Memory summary</button>
+            <button class="text-button" id="show-export-prompt" data-i18n="exportPrompt">Create a personal-data export prompt</button>
           </article>
+        </div>
+
+        <div class="prompt-output hidden" id="prompt-output">
+          <p class="eyebrow" data-i18n="promptEyebrow">SAFE EXPORT PROMPT</p>
+          <h3 data-i18n="promptTitle">Ask ChatGPT to summarize usable personal context.</h3>
+          <p data-i18n="promptIntro">Paste this prompt into ChatGPT or another assistant, review its output, then paste only the memories you approve below.</p>
+          <textarea id="personal-data-prompt" rows="18" readonly aria-label="Personal-data export prompt" data-i18n-aria-label="promptAriaLabel"></textarea>
+          <button id="copy-export-prompt" data-i18n="copyPrompt">Copy prompt</button>
         </div>
 
         <div class="memory-input hidden" id="memory-input">

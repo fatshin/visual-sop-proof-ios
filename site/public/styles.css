@@ -309,6 +309,22 @@ h1 em { color: var(--gold); font-style: normal; }
   border: 1px solid var(--line);
   background: var(--panel);
 }
+.prompt-output {
+  margin-top: 18px;
+  padding: clamp(24px, 4vw, 38px);
+  border: 1px solid rgba(217,184,117,.4);
+  background: linear-gradient(120deg, rgba(157,123,234,.08), rgba(217,184,117,.04));
+}
+.prompt-output h3 { margin: 8px 0; font-family: var(--serif); font-size: 1.65rem; font-weight: 400; }
+.prompt-output > p:not(.eyebrow) { max-width: 790px; color: var(--muted); }
+.prompt-output textarea { margin-top: 18px; min-height: 360px; line-height: 1.65; }
+.prompt-output button {
+  margin-top: 12px;
+  padding: 11px 16px;
+  border: 0;
+  color: #17100a;
+  background: var(--gold);
+}
 .memory-input label { display: block; margin-bottom: 10px; color: var(--gold); }
 textarea {
   width: 100%;

@@ -6,6 +6,7 @@ cd "$(dirname "$0")/.."
 frames=(
   artifacts/screenshots/01-hero.png
   artifacts/screenshots/02-birth-context.png
+  artifacts/screenshots/08-personal-data-prompt.png
   artifacts/screenshots/03-memory-consent.png
   artifacts/screenshots/04-synthesis.png
   artifacts/screenshots/05-ten-readings.png
