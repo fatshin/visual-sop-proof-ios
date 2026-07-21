@@ -28,9 +28,10 @@ class OracleCouncilTests(unittest.TestCase):
         )
         self.assertEqual(reading["status"], "REFLECTION_READY")
         self.assertEqual(len(reading["readings"]), 10)
-        self.assertEqual(reading["memory_count"], 4)
-        self.assertIn("entertainment and reflection", reading["disclaimer"])
-        self.assertEqual(reading["birth_context"]["time_precision"], "approximate")
+        self.assertEqual(reading["memoryCount"], 4)
+        self.assertIn("entertainment and structured reflection", reading["disclaimer"])
+        self.assertEqual(reading["birth"]["timePrecision"], "approximate")
+        self.assertEqual(reading["sourceCount"], 3)
         self.assertTrue(all(len(item["actions"]) == 3 for item in reading["readings"]))
         self.assertEqual(reading["readings"][4]["symbol"], "Aries Sun · morning")
         self.assertEqual(reading["readings"][6]["symbol"], "Life Path 5")
@@ -188,6 +189,8 @@ class OracleCouncilTests(unittest.TestCase):
     def test_future_birth_date_is_rejected(self) -> None:
         with self.assertRaisesRegex(ValueError, "future"):
             product.validate_birth_context(self.birth(birth_date="2999-01-01"))
+        with self.assertRaisesRegex(ValueError, "YYYY-MM-DD"):
+            product.validate_birth_context(self.birth(birth_date="19900418"))
 
     def test_obsidian_export_contains_sources_and_review_boundary(self) -> None:
         records = product.sample_records()
@@ -197,8 +200,10 @@ class OracleCouncilTests(unittest.TestCase):
         self.assertIn("## Birth context", note)
         self.assertIn("## Memories used", note)
         self.assertIn("## Seven-day review", note)
-        self.assertIn("entertainment and reflection", note)
+        self.assertIn("entertainment and structured reflection", note)
         self.assertEqual(note.count("**Three ways to act**"), 10)
+        self.assertEqual(note.count("**What this lens sees**"), 10)
+        self.assertEqual(note.count("**Why this may land**"), 10)
         self.assertIn("  - work", note)
         self.assertNotIn("  - 仕事", note)
 

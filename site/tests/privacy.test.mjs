@@ -20,4 +20,6 @@ test("rejects secret-like memory text from every browser import path", () => {
 
 test("keeps ordinary reflection text", () => {
   assert.equal(looksSensitive("次の仕事について考えた記録です。"), false);
+  assert.equal(looksSensitive("I evaluated passwordless login and tokenization."), false);
+  assert.equal(looksSensitive("A trade secret and a token of appreciation."), false);
 });

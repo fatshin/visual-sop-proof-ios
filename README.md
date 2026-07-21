@@ -25,8 +25,10 @@ Open `http://localhost:3000`.
 
 The browser demo accepts individual Obsidian Markdown files, an Obsidian
 folder, an unzipped ChatGPT `conversations.json`, and text copied from the
-ChatGPT Memory summary. The local Python engine also accepts the original
-ChatGPT export ZIP.
+ChatGPT Memory summary. The local Python command also accepts the original
+ChatGPT export ZIP and invokes the same JavaScript reading engine used by the
+browser, so identical inputs produce identical readings. Node.js 22.13 or
+newer is required for this shared engine.
 
 Birth date, birth time, and birth place are required. A person who does not
 know the exact time or location may enter `unknown` or an approximate value,

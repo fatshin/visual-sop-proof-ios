@@ -54,8 +54,9 @@ const SIGNS = [
   [12, 22, "Capricorn", "山羊座"],
 ];
 
-const TRADITIONS = [
+export const TRADITIONS = [
   {
+    kind: "i_ching",
     method: { en: "I Ching", ja: "易経" },
     symbols: [
       { en: "Difficulty at the Beginning", ja: "水雷屯" },
@@ -84,6 +85,7 @@ const TRADITIONS = [
     },
   },
   {
+    kind: "four_pillars",
     method: { en: "Four Pillars-inspired balance lens", ja: "四柱推命に着想を得た均衡の視点" },
     symbols: [
       { en: "Climate before force", ja: "調候を先に見る" },
@@ -112,6 +114,7 @@ const TRADITIONS = [
     },
   },
   {
+    kind: "nine_star_ki",
     method: { en: "Nine Star Ki-inspired timing lens", ja: "九星気学に着想を得た時機の視点" },
     symbols: [
       { en: "Prepare", ja: "準備期" },
@@ -119,8 +122,8 @@ const TRADITIONS = [
       { en: "Review", ja: "見直し期" },
     ],
     context: {
-      en: "Nine Star Ki is often used to reflect on cycles and timing. This tool does not calculate an authoritative natal star; it uses a nine-step cycle to separate preparation, movement, and review.",
-      ja: "九星気学は周期と時機を考える際に使われます。このツールは正式な本命星を算出せず、9段階の周期を使って準備・行動・見直しを分けます。",
+      en: "Nine Star Ki is often used to reflect on cycles and timing. This tool does not calculate an authoritative natal star; it borrows only a three-phase timing prompt to separate preparation, movement, and review.",
+      ja: "九星気学は周期と時機を考える際に使われます。このツールは正式な本命星を算出せず、着想として借りた三つの段階で準備・行動・見直しを分けます。",
     },
     insight: {
       en: "Your uncertainty becomes easier to hold when the decision is not treated as one irreversible moment. Give each phase a different job.",
@@ -140,6 +143,7 @@ const TRADITIONS = [
     },
   },
   {
+    kind: "sukuyo",
     method: { en: "Sukuyō-inspired relationship lens", ja: "宿曜に着想を得た関係の視点" },
     symbols: [
       { en: "Supportive orbit", ja: "栄親のような支援関係" },
@@ -168,6 +172,7 @@ const TRADITIONS = [
     },
   },
   {
+    kind: "astrology",
     method: { en: "Western astrology-inspired identity lens", ja: "西洋占星術に着想を得た自己像の視点" },
     symbols: [],
     context: {
@@ -192,6 +197,7 @@ const TRADITIONS = [
     },
   },
   {
+    kind: "tarot",
     method: { en: "Tarot", ja: "タロット" },
     symbols: [
       { en: "The Hermit", ja: "隠者" },
@@ -220,6 +226,7 @@ const TRADITIONS = [
     },
   },
   {
+    kind: "numerology",
     method: { en: "Numerology", ja: "数秘術" },
     symbols: [],
     context: {
@@ -244,6 +251,7 @@ const TRADITIONS = [
     },
   },
   {
+    kind: "runes",
     method: { en: "Runes", ja: "ルーン" },
     symbols: [
       { en: "Jera — harvest", ja: "Jera — 収穫" },
@@ -272,6 +280,7 @@ const TRADITIONS = [
     },
   },
   {
+    kind: "geomancy",
     method: { en: "Geomancy", ja: "ジオマンシー" },
     symbols: [
       { en: "Conjunctio — connection", ja: "Conjunctio — 接続" },
@@ -300,10 +309,12 @@ const TRADITIONS = [
     },
   },
   {
+    kind: "lunar_cadence",
     method: { en: "Lunar-calendar-inspired cadence lens", ja: "月相・暦に着想を得た歩調の視点" },
     symbols: [
       { en: "Initiate", ja: "始める" },
       { en: "Build", ja: "育てる" },
+      { en: "Review", ja: "見直す" },
       { en: "Release", ja: "手放す" },
     ],
     context: {
@@ -387,8 +398,12 @@ function timeBand(value, lang) {
 export function validateBirthInput(input, today = new Date()) {
   const date = validIsoDate(String(input.date || ""));
   if (!date) throw new Error("birth-date");
-  const todayUtc = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()));
-  if (date > todayUtc) throw new Error("birth-date-future");
+  const todayIso = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
+  if (input.date > todayIso) throw new Error("birth-date-future");
   if (!String(input.time || "").trim()) throw new Error("birth-time");
   if (!String(input.place || "").trim()) throw new Error("birth-place");
   if (!["exact", "approximate", "unknown"].includes(input.timePrecision)) {
@@ -467,6 +482,124 @@ function themeHypothesis(theme, lang) {
   return hypotheses[theme]?.[lang] || hypotheses.変化[lang];
 }
 
+function birthContextNarrative(profile, lang) {
+  const timePrecision = TEXT[lang].precision[profile.timePrecision];
+  const placePrecision = TEXT[lang].precision[profile.placePrecision];
+  const avoidsPreciseChartClaims =
+    profile.timePrecision !== "exact" || profile.placePrecision !== "exact";
+  if (lang === "ja") {
+    const precisionBoundary = avoidsPreciseChartClaims
+      ? "時刻または場所に幅があるため、上昇星座・ハウス・地域ごとの天空配置のように正確さを必要とする判断には踏み込みません。分からない部分を埋めて断定するのではなく、『確認できている事実』と『まだ幅を残す解釈』を分けます。"
+      : "時刻と場所は正確とされていますが、このツールは天文計算や専門的な命式計算を行いません。入力の細かさを理由に、未来や性格を断定しないという境界は変わりません。";
+    return (
+      `出生情報は結論を決める判定材料ではなく、人生の始点を一度固定して問いを眺めるための枠として使います。` +
+      `生年月日からは${profile.sunSign}とライフパス${profile.lifePath}という再現可能な象徴だけを取り出します。` +
+      `出生時刻は「${profile.time}」を${timePrecision}として、出生場所は「${profile.place}」を${placePrecision}として扱います。` +
+      precisionBoundary
+    );
+  }
+  const precisionBoundary = avoidsPreciseChartClaims
+    ? "Because the time or place carries uncertainty, this reading does not make claims about an ascendant, houses, or a location-specific sky. It keeps known facts separate from interpretations that must remain provisional instead of filling the gaps with false precision."
+    : "Although the time and place are marked exact, this tool does not perform astronomical or specialist chart calculations. More precise input does not change the boundary against treating a symbol as a factual verdict about personality or the future.";
+  return (
+    "Birth context is used as a frame for looking at the question from a fixed starting point, not as evidence that decides the answer. " +
+    `The date contributes only two reproducible symbols: ${profile.sunSign} and Life Path ${profile.lifePath}. ` +
+    `The recorded time, “${profile.time},” is treated as ${timePrecision}; the place, “${profile.place},” is treated as ${placePrecision}. ` +
+    precisionBoundary
+  );
+}
+
+function methodBoundaryNarrative(tradition, lang) {
+  const boundaries = {
+    i_ching: {
+      en: "Use this hexagram as a way to inspect sequence: what must exist before movement can hold. It cannot tell you whether an external event will occur. Its value is narrower and more practical—it makes the missing first condition visible enough to test.",
+      ja: "この卦は、動きが持続する前に何が必要かという順序を点検するために使います。外部の出来事が起こるかどうかは断定できません。価値があるのは、欠けている最初の条件を検証できる形で見えるようにする点です。",
+    },
+    four_pillars: {
+      en: "This balance lens separates personal effort from the conditions carrying that effort. It does not calculate a Four Pillars chart. It asks a bounded question instead: is the present environment feeding the responsibility you want, or quietly making every step more expensive?",
+      ja: "この均衡の視点は、本人の努力と、その努力を支える環境条件を分けて考えます。四柱推命の命式は算出しません。代わりに、現在の環境が望む責任を支えているか、それとも一歩ごとの負担を密かに増やしているかを問います。",
+    },
+    nine_star_ki: {
+      en: "This timing lens is useful only if it changes the job of the current phase. Preparation gathers evidence, movement spends it, and review decides what the evidence changed. It does not identify an auspicious date; it prevents one phase from being mistaken for another.",
+      ja: "この時機の視点は、現在の段階に与える役割が変わるときに役立ちます。準備は証拠を集め、行動は証拠を使い、見直しは何が変わったかを判断します。吉日を特定するのではなく、段階の取り違えを防ぎます。",
+    },
+    sukuyo: {
+      en: "This relationship lens examines the orbit around the decision: who sharpens your evidence, who protects comfort, and who takes away ownership. It does not rank people as fortunate or harmful. It helps you assign each voice an appropriate role before asking for advice.",
+      ja: "この関係の視点は、決断の周囲にいる人を、証拠を鋭くする人、安心を守る人、判断の主体性を奪う人という役割から見ます。人を吉凶で分類せず、助言を求める前に、それぞれの声をどこまで採用するかを整理します。",
+    },
+    astrology: {
+      en: "This identity lens uses the Sun sign as a seasonal metaphor for visible intention, not as a complete personality profile. It earns its place only when the identity you name can be translated into behavior and exposed to evidence that could confirm or revise it.",
+      ja: "この自己像の視点は、太陽星座を完全な性格診断ではなく、意図を外に見せるための季節的な比喩として使います。名付けた自己像を行動へ変え、確認または修正できる証拠にさらせる場合にだけ、この読みは意味を持ちます。",
+    },
+    tarot: {
+      en: "This tarot image gives shape to a conflict that may be easier to feel than to name. It is not a supernatural draw and cannot certify the correct choice. Its job is to expose the feared loss on both sides so the more reversible downside becomes visible.",
+      ja: "このタロット像は、感じていても言葉にしにくい葛藤へ形を与えます。超自然的なカード抽選ではなく、正解を保証するものでもありません。動く場合と動かない場合の恐れる損失を並べ、より修正可能な不利益を見えるようにします。",
+    },
+    numerology: {
+      en: "The number is reproducible arithmetic, but its meaning remains a prompt. This lens is credible only where the proposed strength appears in your recorded choices and where you can also find a case in which that same strength became excessive or costly.",
+      ja: "数字の計算は再現できますが、その意味はあくまで問いを作るための象徴です。示された強みが実際の選択記録に現れ、同時にその強みが過剰または負担になった例も見つけられる場合にだけ、この読みを採用します。",
+    },
+    runes: {
+      en: "This rune lens looks for return from repeated effort rather than promising a harvest. It asks whether the signal is strong enough to continue, weak enough to change, or absent enough to stop. The decision rule must be written before another round of effort.",
+      ja: "このルーンの視点は、実りを約束するのではなく、繰り返した努力から何が返ってきたかを見ます。継続できる信号か、変更すべき弱さか、停止すべき不在かを問い、次の努力を始める前に判断条件を書きます。",
+    },
+    geomancy: {
+      en: "This geomantic figure is treated as a map of connections, not a verdict produced by the earth. It asks which two facts have been kept apart and what observation could join or separate them. The connection must survive a concrete test to matter.",
+      ja: "このジオマンシーの形は、大地が与える判決ではなく、情報同士の接続図として扱います。別々に置かれていた二つの事実と、それらを結ぶか分ける観察を問い、具体的な検証に耐えた接続だけを残します。",
+    },
+    lunar_cadence: {
+      en: "This cadence lens assigns a different task to starting, building, reviewing, and releasing. It does not calculate a lunar election or ideal date. It helps detect when you are trying to start during a review, or keep building what the evidence already asks you to release.",
+      ja: "この歩調の視点は、開始・育成・見直し・手放しに異なる仕事を割り当てます。月の吉日や理想の日付は算出しません。見直すべき時に始めようとしていないか、手放す証拠があるのに育て続けていないかを見分けます。",
+    },
+  };
+  return boundaries[tradition.kind][lang];
+}
+
+function interpretiveNarrative(tradition, symbol, question, leadingTheme, lang) {
+  const hypothesis = themeHypothesis(leadingTheme, lang);
+  if (lang === "ja") {
+    return (
+      `${tradition.insight.ja}\n\n` +
+      `今回の「${symbol}」は、問い「${question}」への答えそのものではありません。` +
+      `${tradition.method.ja}の言葉を借りて、いま見落としている条件を一つ浮かび上がらせるための仮説です。` +
+      `${hypothesis} したがって、読むべきなのは「当たっているか」だけではなく、` +
+      `この仮説を採用したときに、どの選択肢の危険・負担・可能性が以前より具体的に見えるかです。` +
+      `違和感が残るなら、その違和感も反証として記録し、次の検証で読みを更新します。`
+    );
+  }
+  return (
+    `${tradition.insight.en}\n\n` +
+    `“${symbol}” is not the answer to “${question}.” It is a working hypothesis, expressed through the language of ${tradition.method.en}, about a condition that may currently be easy to overlook. ` +
+    `${hypothesis} The useful question is therefore not only whether the description feels accurate. Ask which risk, burden, or possibility becomes more specific when you temporarily adopt this lens. ` +
+    "If part of the reading does not fit, preserve that friction as counter-evidence. The reading becomes more useful when reality is allowed to revise it."
+  );
+}
+
+function evidenceNarrative(memory, comparisonMemory, localizedTheme, lang) {
+  const sameMemory = memory.id === comparisonMemory.id;
+  if (lang === "ja") {
+    const comparison = sameMemory
+      ? `参照できる記憶が一件のため、この解釈はまだ一つの出来事に依存しています。別の時期の記憶を追加し、同じ型が繰り返しているかを確かめる余地があります。`
+      : `もう一つの記憶「${comparisonMemory.title}」には「${excerpt(comparisonMemory.text)}」とあります。二つを並べると、一度きりの気分ではなく、異なる場面で「${localizedTheme}」への向き合い方が繰り返されているかを確認できます。`;
+    return (
+      `記憶「${memory.title}」には「${excerpt(memory.text)}」とあります。` +
+      `象徴の説明を先に信じるのではなく、この具体的な言葉を出発点にします。ここには、当時の自分が何を望み、何を危険と感じ、どこまでなら試せると考えたかが残っています。\n\n` +
+      comparison +
+      `\n\n腹落ちの根拠は、占術名の権威ではありません。自分が実際に残した言葉を二つ以上の場面で照合し、同じ選択の癖と例外の両方が見えることです。` +
+      `この読みは「あなたはこういう人だ」と固定するためではなく、次の一手を小さくし、結果から修正できるようにするために使います。`
+    );
+  }
+  const comparison = sameMemory
+    ? "Only one memory is available, so this interpretation still depends on a single episode. Add a memory from another period before treating the pattern as repeated."
+    : `A second memory, “${comparisonMemory.title},” says: “${excerpt(comparisonMemory.text)}” Placing the two side by side tests whether your way of handling ${localizedTheme} appears across different situations rather than only in one passing mood.`;
+  return (
+    `The memory “${memory.title}” says: “${excerpt(memory.text)}” The reading starts with these concrete words instead of asking you to believe the symbol first. They preserve what you wanted at the time, what you experienced as dangerous, and what kind of experiment still felt possible.\n\n` +
+    comparison +
+    "\n\nThe reason this may land is not the authority of a divination system. It is the ability to compare words you actually left behind, find both a repeated decision pattern and its exceptions, and turn that evidence into a smaller next move. " +
+    "Use the lens to make the next test more observable and reversible, not to freeze yourself into a personality label."
+  );
+}
+
 export function createDeepReading({
   question,
   memories,
@@ -476,8 +609,9 @@ export function createDeepReading({
 }) {
   if (!["en", "ja"].includes(lang)) throw new Error("language");
   const normalizedQuestion = String(question).replace(/\s+/gu, " ").trim();
-  if (normalizedQuestion.length < 4) throw new Error("question");
+  if (Array.from(normalizedQuestion).length < 4) throw new Error("question");
   if (!Array.isArray(memories) || memories.length === 0) throw new Error("memories");
+  if (!Array.isArray(themes)) throw new Error("themes");
 
   const profile = buildBirthProfile(birth, lang);
   const leadingTheme = themes[0]?.theme || "変化";
@@ -490,19 +624,31 @@ export function createDeepReading({
 
   const readings = TRADITIONS.map((tradition, index) => {
     const memory = memories[(seed + index * 7) % memories.length];
+    const comparisonMemory = memories[(seed + index * 7 + 1) % memories.length];
     let symbol;
-    if (index === 4) symbol = `${profile.sunSign} Sun · ${profile.timeBand}`;
-    else if (index === 6) symbol = `Life Path ${profile.lifePath}`;
-    else symbol = tradition.symbols[(seed + index * 3) % tradition.symbols.length][lang];
-    const resonance =
-      lang === "ja"
-        ? `記憶「${memory.title}」には「${excerpt(memory.text)}」とあります。これは「${localizedTheme}」が抽象的な性格診断ではなく、実際の選択履歴に現れている根拠です。`
-        : `The memory “${memory.title}” says: “${excerpt(memory.text)}” This makes ${localizedTheme} more than a personality label; it is visible in your own decision history.`;
+    if (tradition.kind === "astrology") {
+      symbol =
+        lang === "ja"
+          ? `${profile.sunSign}の太陽星座・${profile.timeBand}`
+          : `${profile.sunSign} Sun · ${profile.timeBand}`;
+    } else if (tradition.kind === "numerology") {
+      symbol = lang === "ja" ? `ライフパス ${profile.lifePath}` : `Life Path ${profile.lifePath}`;
+    }
+    else symbol = tradition.symbols[(seed + index) % tradition.symbols.length][lang];
+    const context = `${tradition.context[lang]}\n\n${methodBoundaryNarrative(tradition, lang)}`;
+    const interpretation = interpretiveNarrative(
+      tradition,
+      symbol,
+      normalizedQuestion,
+      leadingTheme,
+      lang,
+    );
+    const resonance = evidenceNarrative(memory, comparisonMemory, localizedTheme, lang);
     return {
       method: tradition.method[lang],
       symbol,
-      context: tradition.context[lang],
-      interpretation: tradition.insight[lang],
+      context,
+      interpretation,
       resonance,
       actions: tradition.actions[lang],
       memory,
@@ -511,14 +657,16 @@ export function createDeepReading({
   });
 
   const evidenceTitles = memories.slice(0, 2).map((item) => `“${item.title}”`).join(" and ");
+  const evidenceVerb = memories.length === 1 ? "repeats" : "repeat";
   const synthesis =
     lang === "ja"
       ? `${profile.sunSign}・ライフパス${profile.lifePath}という出生情報は、答えを決めるものではありません。` +
         `腹落ちの根拠は、選んだ記憶${memories.slice(0, 2).map((item) => `「${item.title}」`).join("と")}に同じ「${localizedTheme}」の型が現れていることです。` +
         `${themeHypothesis(leadingTheme, lang)} したがって、次に必要なのは確信を待つことではなく、後戻りできる小さな検証を作ることです。`
       : `Your ${profile.sunSign} Sun and Life Path ${profile.lifePath} do not decide the answer. ` +
-        `The grounding evidence is that ${evidenceTitles} repeat the same ${localizedTheme} pattern. ` +
+        `The grounding evidence is that ${evidenceTitles} ${evidenceVerb} the same ${localizedTheme} pattern. ` +
         `${themeHypothesis(leadingTheme, lang)} The next step is therefore not to wait for certainty, but to build a small, reversible test.`;
+  const groundedSynthesis = `${synthesis}\n\n${birthContextNarrative(profile, lang)}`;
 
   return {
     status: "REFLECTION_READY",
@@ -526,9 +674,18 @@ export function createDeepReading({
     question: normalizedQuestion,
     birth: profile,
     memoryCount: memories.length,
+    sourceCount: new Set(memories.map((item) => item.source)).size,
     themes,
-    synthesis,
+    synthesis: groundedSynthesis,
     readings,
+    nextStep:
+      lang === "ja"
+        ? "一つの占術から行動案を一つ選び、24時間以内に実行して7日後に証拠を見直します。"
+        : "Choose one action from one lens within 24 hours, then review the evidence in seven days.",
+    disclaimer:
+      lang === "ja"
+        ? "これは娯楽と構造化された内省です。医療・法律・投資・安全の判断には使用できません。"
+        : "This is entertainment and structured reflection. Do not use it for medical, legal, financial, or safety decisions.",
   };
 }
 
@@ -546,8 +703,8 @@ export function buildReadingMarkdown(reading) {
     `memory_count: ${reading.memoryCount}`,
     "themes:",
     ...(reading.themes.length
-      ? reading.themes.map((item) => `  - ${item.theme}`)
-      : ["  - 変化"]),
+      ? reading.themes.map((item) => `  - ${TEXT[lang].themes[item.theme] || item.theme}`)
+      : [`  - ${TEXT[lang].fallbackTheme}`]),
     "review_after_days: 7",
     "---",
     "",
@@ -600,9 +757,7 @@ export function buildReadingMarkdown(reading) {
   lines.push(
     isJa ? "## 次の一歩" : "## Next step",
     "",
-    isJa
-      ? "一つの占術から行動案を一つ選び、24時間以内に実行して7日後に証拠を見直します。"
-      : "Choose one action from one lens within 24 hours, then review the evidence in seven days.",
+    reading.nextStep,
     "",
     isJa ? "## 使用した記憶" : "## Memories used",
     "",
@@ -613,9 +768,7 @@ export function buildReadingMarkdown(reading) {
     "",
     isJa ? "## 注意" : "## Notice",
     "",
-    isJa
-      ? "これは娯楽と構造化された内省です。医療・法律・投資・安全の判断には使用できません。"
-      : "This is entertainment and structured reflection. Do not use it for medical, legal, financial, or safety decisions.",
+    reading.disclaimer,
     "",
     isJa ? "## 7日後の振り返り" : "## Seven-day review",
     "",

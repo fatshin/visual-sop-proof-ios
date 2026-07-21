@@ -9,6 +9,8 @@ frames=(
   artifacts/screenshots/03-memory-consent.png
   artifacts/screenshots/04-synthesis.png
   artifacts/screenshots/05-ten-readings.png
+  artifacts/screenshots/06-long-form-reading.png
+  artifacts/screenshots/07-grounded-reading.png
   artifacts/screenshots/06-obsidian-export.png
 )
 

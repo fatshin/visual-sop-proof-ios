@@ -5,6 +5,7 @@ import {
   buildBirthProfile,
   buildReadingMarkdown,
   createDeepReading,
+  TRADITIONS,
   validateBirthInput,
 } from "../public/reading.js";
 
@@ -83,10 +84,21 @@ for (const lang of ["en", "ja"]) {
 
     assert.equal(reading.lang, lang);
     assert.equal(reading.readings.length, 10);
+    const symbolOffsets = reading.readings
+      .map((item, index) =>
+        ["astrology", "numerology"].includes(TRADITIONS[index].kind)
+          ? null
+          : TRADITIONS[index].symbols.findIndex((symbol) => symbol[lang] === item.symbol),
+      )
+      .filter((offset) => offset !== null);
+    assert.ok(new Set(symbolOffsets).size > 1, "traditions must not all use the same symbol offset");
     assert.ok(reading.synthesis.length > 180);
     for (const item of reading.readings) {
-      assert.ok(item.context.length > (lang === "ja" ? 40 : 80));
-      assert.ok(item.interpretation.length > (lang === "ja" ? 38 : 70));
+      const prose = `${item.context}\n\n${item.interpretation}\n\n${item.resonance}`;
+      const paragraphCount = prose.split(/\n{2,}/u).length;
+      const depth = lang === "ja" ? Array.from(prose).length : prose.trim().split(/\s+/u).length;
+      assert.ok(paragraphCount >= 7, `${lang} reading has only ${paragraphCount} paragraphs`);
+      assert.ok(depth >= (lang === "ja" ? 700 : 260), `${lang} reading depth is only ${depth}`);
       assert.match(item.resonance, /A role I want to test|How I make decisions/);
       assert.equal(item.actions.length, 3);
       assert.ok(item.actions.every((action) => action.length > (lang === "ja" ? 14 : 25)));
@@ -100,10 +112,22 @@ for (const lang of ["en", "ja"]) {
     assert.match(markdown, /birth_time_precision: approximate/);
     assert.match(markdown, /status: REFLECTION_READY/);
     assert.match(markdown, /memory_count: 2/);
-    assert.match(markdown, /themes:\n  - 仕事/);
+    assert.match(markdown, lang === "ja" ? /themes:\n  - 仕事/ : /themes:\n  - work/);
     assert.match(markdown, lang === "ja" ? /共有前に内容を確認/ : /Review it before sharing/);
     assert.match(markdown, lang === "ja" ? /## 使用した記憶/ : /## Memories used/);
     assert.match(markdown, lang === "ja" ? /医療・法律・投資・安全/ : /medical, legal, financial, or safety/);
+    assert.doesNotMatch(markdown, lang === "ja" ? /\b(?:Sun|Life Path)\b/ : /ライフパス|太陽星座/);
     assert.match(markdown, /Career\/test\.md/);
   });
 }
+
+test("single-memory synthesis uses singular English grammar", () => {
+  const reading = createDeepReading({
+    question: "What should I test next?",
+    memories: [memories[0]],
+    themes,
+    birth,
+    lang: "en",
+  });
+  assert.match(reading.synthesis, /“A role I want to test” repeats the same work pattern/);
+});

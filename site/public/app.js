@@ -3,6 +3,7 @@ import {
   buildReadingMarkdown,
   createDeepReading,
   readingText,
+  TRADITIONS,
   validateBirthInput,
 } from "./reading.js";
 
@@ -77,6 +78,7 @@ const copy = {
     birthTimeError: "Enter a birth time, an approximate time, or “unknown”",
     birthPlaceError: "Enter a birth place, an approximate area, or “unknown”",
     birthPrecisionError: "Choose exact, approximate, or unknown for both precision fields",
+    readingError: "The reading could not be created. Review the inputs and try again.",
     noteSaved: "Obsidian Markdown saved",
     defaultQuestion: "What evidence should I create before moving into my next role?",
   },
@@ -150,25 +152,15 @@ const copy = {
     birthTimeError: "出生時刻・おおよその時間帯・「不明」のいずれかを入力してください",
     birthPlaceError: "出生場所・おおよその地域・「不明」のいずれかを入力してください",
     birthPrecisionError: "時刻と場所の精度を「正確・おおよそ・不明」から選んでください",
+    readingError: "リーディングを作成できませんでした。入力内容を確認して、もう一度お試しください。",
     noteSaved: "Obsidian用Markdownを保存しました",
     defaultQuestion: "次の役割へ進む前に、どのような証拠を作るべきですか。",
   },
 };
 
 const traditionNames = {
-  en: [
-    "I Ching",
-    "Four Pillars-inspired",
-    "Nine Star Ki-inspired",
-    "Sukuyō-inspired",
-    "Western astrology-inspired",
-    "Tarot",
-    "Numerology",
-    "Runes",
-    "Geomancy",
-    "Lunar cadence",
-  ],
-  ja: ["易経", "四柱推命に着想", "九星気学に着想", "宿曜に着想", "西洋占星術に着想", "タロット", "数秘術", "ルーン", "ジオマンシー", "月相・暦"],
+  en: TRADITIONS.map((tradition) => tradition.method.en),
+  ja: TRADITIONS.map((tradition) => tradition.method.ja),
 };
 
 const sampleMemories = [
@@ -255,6 +247,13 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function renderProse(value) {
+  return String(value)
+    .split(/\n{2,}/u)
+    .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+    .join("");
 }
 
 function makeId(source, title, text) {
@@ -502,7 +501,7 @@ function createReading() {
   const memories = state.memories.filter((item) => item.selected).map(displayMemory);
   const birth = birthValues();
   if (!validateUiBirth(birth)) return;
-  if (question.length < 4) {
+  if (Array.from(question).length < 4) {
     showToast(copy[state.lang].questionError);
     return;
   }
@@ -512,7 +511,12 @@ function createReading() {
     return;
   }
   const themes = detectThemes(memories);
-  state.reading = createDeepReading({ question, memories, themes, birth, lang: state.lang });
+  try {
+    state.reading = createDeepReading({ question, memories, themes, birth, lang: state.lang });
+  } catch {
+    showToast(copy[state.lang].readingError);
+    return;
+  }
   renderReading();
 }
 
@@ -535,12 +539,12 @@ function renderReading() {
           <p class="symbol">${escapeHtml(item.symbol)}</p>
           <section class="reading-block">
             <h4>${escapeHtml(copy[state.lang].contextLabel)}</h4>
-            <p>${escapeHtml(item.context)}</p>
-            <p>${escapeHtml(item.interpretation)}</p>
+            ${renderProse(item.context)}
+            ${renderProse(item.interpretation)}
           </section>
           <section class="reading-block resonance">
             <h4>${escapeHtml(copy[state.lang].resonanceLabel)}</h4>
-            <p>${escapeHtml(item.resonance)}</p>
+            ${renderProse(item.resonance)}
           </section>
           <section class="reading-block actions">
             <h4>${escapeHtml(copy[state.lang].actionLabel)}</h4>
